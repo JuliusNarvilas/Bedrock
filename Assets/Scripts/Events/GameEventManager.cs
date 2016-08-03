@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using Utilities.Events;
+using Common.Events;
 
 public class GameEventManager
 {

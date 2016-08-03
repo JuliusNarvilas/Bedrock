@@ -49,7 +49,7 @@ public class LoadingManagerBehaviour : MonoBehaviour {
         if(s_SceneLoadingResult != null && s_SceneLoadingResult.isDone)
         {
             Scene nextScene = SceneManager.GetSceneByName(s_LoadingSceneName);
-            if (nextScene != null)
+            if (nextScene.IsValid())
             {
                 Scene activeScene = SceneManager.GetActiveScene();
                 SceneManager.SetActiveScene(nextScene);
