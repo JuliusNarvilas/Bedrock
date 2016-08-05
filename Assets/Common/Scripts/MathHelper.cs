@@ -5,7 +5,7 @@ namespace Common
 {
     public static class MathHelper
     {
-        public const float DEFAULT_FLOATING_POINT_EQUAL_ERROR_MARGIN = 0.00001f;
+        public const float DEFAULT_FLOATING_POINT_EQUAL_ERROR_MARGIN = 0.000001f;
 
         public static bool EqualsF(float i_NumberA, float i_NumberB, float i_ErrorMargin = DEFAULT_FLOATING_POINT_EQUAL_ERROR_MARGIN)
         {

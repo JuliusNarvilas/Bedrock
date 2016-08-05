@@ -3,7 +3,7 @@ using System;
 
 namespace Common.Tests
 {
-    public class MathHelperTest
+    public class MathHelperTests
     {
         [Test]
         public void FloatEquals()

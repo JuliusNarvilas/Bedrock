@@ -43,16 +43,17 @@ namespace Common.Collections
             int size = i_Array.Length;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (comparer.Compare(i_Array[writeIndex], i_Array[readIndex]) > 0))
+                int readIndex = index - 1;
+                T examinedValue = i_Array[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (comparer.Compare(i_Array[readIndex], examinedValue) > 0)
                 {
-                    T temp = i_Array[writeIndex];
-                    i_Array[writeIndex] = i_Array[readIndex];
-                    i_Array[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (comparer.Compare(i_Array[readIndex], examinedValue) > 0))
+                    {
+                        i_Array[readIndex + 1] = i_Array[readIndex];
+                        --readIndex;
+                    }
+                    i_Array[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -71,16 +72,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (comparer.Compare(i_List[writeIndex], i_List[readIndex]) > 0))
+                int readIndex = index - 1;
+                T examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (comparer.Compare(i_List[readIndex], examinedValue) > 0)
                 {
-                    T temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (comparer.Compare(i_List[readIndex], examinedValue) > 0))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -94,16 +96,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] > i_List[readIndex]))
+                int readIndex = index - 1;
+                int examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
                 {
-                    int temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -115,16 +118,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] < i_List[readIndex]))
+                int readIndex = index - 1;
+                int examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
                 {
-                    int temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -136,16 +140,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] > i_List[readIndex]))
+                int readIndex = index - 1;
+                float examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
                 {
-                    float temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -153,20 +158,21 @@ namespace Common.Collections
         public static void InsertionSortDescending(this IList<float> i_List)
         {
             Debug.Assert(i_List != null, "Invalid null parameter.");
-
+            
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] < i_List[readIndex]))
+                int readIndex = index - 1;
+                float examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
                 {
-                    float temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -178,16 +184,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] > i_List[readIndex]))
+                int readIndex = index - 1;
+                long examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
                 {
-                    long temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -199,16 +206,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] < i_List[readIndex]))
+                int readIndex = index - 1;
+                long examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
                 {
-                    long temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -217,20 +225,21 @@ namespace Common.Collections
         public static void InsertionSortAscending(this IList<double> i_List)
         {
             Debug.Assert(i_List != null, "Invalid null parameter.");
-
+            
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] > i_List[readIndex]))
+                int readIndex = index - 1;
+                double examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
                 {
-                    double temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -242,16 +251,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] < i_List[readIndex]))
+                int readIndex = index - 1;
+                double examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
                 {
-                    double temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -264,16 +274,17 @@ namespace Common.Collections
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] > i_List[readIndex]))
+                int readIndex = index - 1;
+                short examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
                 {
-                    short temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -281,20 +292,21 @@ namespace Common.Collections
         public static void InsertionSortDescending(this IList<short> i_List)
         {
             Debug.Assert(i_List != null, "Invalid null parameter.");
-
+            
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] < i_List[readIndex]))
+                int readIndex = index - 1;
+                short examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
                 {
-                    short temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -303,20 +315,21 @@ namespace Common.Collections
         public static void InsertionSortAscending(this IList<byte> i_List)
         {
             Debug.Assert(i_List != null, "Invalid null parameter.");
-
+            
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] > i_List[readIndex]))
+                int readIndex = index - 1;
+                byte examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
                 {
-                    byte temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
@@ -324,24 +337,205 @@ namespace Common.Collections
         public static void InsertionSortDescending(this IList<byte> i_List)
         {
             Debug.Assert(i_List != null, "Invalid null parameter.");
-
+            
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
             {
-                int readIndex = index;
-                int writeIndex = index - 1;
-                while ((readIndex > 0) && (i_List[writeIndex] < i_List[readIndex]))
+                int readIndex = index - 1;
+                byte examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
                 {
-                    byte temp = i_List[writeIndex];
-                    i_List[writeIndex] = i_List[readIndex];
-                    i_List[readIndex] = temp;
-
-                    --readIndex;
-                    --writeIndex;
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
                 }
             }
         }
 
-#endregion
+
+        public static void InsertionSortAscending(this IList<ulong> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                ulong examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+        public static void InsertionSortDescending(this IList<ulong> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                ulong examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+
+        public static void InsertionSortAscending(this IList<uint> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                uint examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+        public static void InsertionSortDescending(this IList<uint> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                uint examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+
+        public static void InsertionSortAscending(this IList<ushort> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                ushort examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+        public static void InsertionSortDescending(this IList<ushort> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                ushort examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+
+        public static void InsertionSortAscending(this IList<sbyte> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                sbyte examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] > examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] > examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+        public static void InsertionSortDescending(this IList<sbyte> i_List)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            for (int index = 1; index < size; ++index)
+            {
+                int readIndex = index - 1;
+                sbyte examinedValue = i_List[index];
+                //early break test for quicker processing of almost sorted arrays
+                if (i_List[readIndex] < examinedValue)
+                {
+                    while ((readIndex >= 0) && (i_List[readIndex] < examinedValue))
+                    {
+                        i_List[readIndex + 1] = i_List[readIndex];
+                        --readIndex;
+                    }
+                    i_List[readIndex + 1] = examinedValue;
+                }
+            }
+        }
+
+        #endregion
     }
 }

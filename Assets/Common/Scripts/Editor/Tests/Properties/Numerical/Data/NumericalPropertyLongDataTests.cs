@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using Common.Properties.Numerical.Data;
 
-namespace Common.Properties.Tests.Numerical.Data
+namespace Common.Tests.Properties.Numerical.Data
 {
     class NumericalPropertyLongDataTests
     {
