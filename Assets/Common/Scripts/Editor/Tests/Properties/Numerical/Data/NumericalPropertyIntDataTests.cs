@@ -27,7 +27,7 @@ namespace Common.Tests.Properties.Numerical.Data
             NumericalPropertyIntData propertyDataValue = new NumericalPropertyIntData(randomIntSource);
 
             INumericalPropertyData<int> createdPropertyDataValue = propertyDataValue.CreateZero();
-            Assert.That(createdPropertyDataValue != propertyDataValue);
+            Assert.That(!ReferenceEquals(createdPropertyDataValue, propertyDataValue));
             Assert.That(createdPropertyDataValue.Get() == 0);
         }
 

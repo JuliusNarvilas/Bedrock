@@ -11,17 +11,27 @@ namespace Common.Properties.Numerical.Specialisations
         { }
     }
     public class NumericalPropertyInt<TContext> : NumericalPropertyInt<TContext, INumericalPropertyModifierReader<int>>
-    { }
+    {
+        public NumericalPropertyInt()
+        { }
+        public NumericalPropertyInt(int i_Value) : base(i_Value)
+        { }
+    }
 
     public class NumericalPropertyFloat<TContext, TModifierReader> : NumericalProperty<float, TContext, TModifierReader> where TModifierReader : INumericalPropertyModifierReader<float>
     {
         public NumericalPropertyFloat() : base(new NumericalPropertyFloatData(0.0f))
         { }
-        public NumericalPropertyFloat(int i_Value) : base(new NumericalPropertyFloatData(i_Value))
+        public NumericalPropertyFloat(float i_Value) : base(new NumericalPropertyFloatData(i_Value))
         { }
     }
     public class NumericalPropertyFloat<TContext> : NumericalPropertyFloat<TContext, INumericalPropertyModifierReader<float>>
-    { }
+    {
+        public NumericalPropertyFloat()
+        { }
+        public NumericalPropertyFloat(float i_Value) : base(i_Value)
+        { }
+    }
 
     public class NumericalPropertyLong<TContext, TModifierReader> : NumericalProperty<long, TContext, TModifierReader> where TModifierReader : INumericalPropertyModifierReader<long>
     {
@@ -31,7 +41,12 @@ namespace Common.Properties.Numerical.Specialisations
         { }
     }
     public class NumericalPropertyLong<TContext> : NumericalPropertyLong<TContext, INumericalPropertyModifierReader<long>>
-    { }
+    {
+        public NumericalPropertyLong()
+        { }
+        public NumericalPropertyLong(long i_Value) : base(i_Value)
+        { }
+    }
 
     public class NumericalPropertyDouble<TContext, TModifierReader> : NumericalProperty<double, TContext, TModifierReader> where TModifierReader : INumericalPropertyModifierReader<double>
     {
@@ -41,6 +56,11 @@ namespace Common.Properties.Numerical.Specialisations
         { }
     }
     public class NumericalPropertyDouble<TContext> : NumericalPropertyDouble<TContext, INumericalPropertyModifierReader<double>>
-    { }
+    {
+        public NumericalPropertyDouble()
+        { }
+        public NumericalPropertyDouble(double i_Value) : base(i_Value)
+        { }
+    }
 
 }

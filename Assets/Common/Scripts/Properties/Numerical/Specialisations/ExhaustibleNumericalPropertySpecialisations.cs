@@ -10,17 +10,27 @@ namespace Common.Properties.Numerical.Specialisations
         { }
     }
     public class ExhaustibleNumericalPropertyInt<TContext> : ExhaustibleNumericalPropertyInt<TContext, INumericalPropertyModifierReader<int>>
-    { }
+    {
+        public ExhaustibleNumericalPropertyInt() : base(0)
+        { }
+        public ExhaustibleNumericalPropertyInt(int i_Value) : base(i_Value)
+        { }
+    }
 
     public class ExhaustibleNumericalPropertyFloat<TContext, TModifierReader> : ExhaustibleNumericalProperty<float, TContext, TModifierReader> where TModifierReader : INumericalPropertyModifierReader<float>
     {
         public ExhaustibleNumericalPropertyFloat() : base(new NumericalPropertyFloatData(0.0f))
         { }
-        public ExhaustibleNumericalPropertyFloat(int i_Value) : base(new NumericalPropertyFloatData(i_Value))
+        public ExhaustibleNumericalPropertyFloat(float i_Value) : base(new NumericalPropertyFloatData(i_Value))
         { }
     }
     public class ExhaustibleNumericalPropertyFloat<TContext> : ExhaustibleNumericalPropertyFloat<TContext, INumericalPropertyModifierReader<float>>
-    { }
+    {
+        public ExhaustibleNumericalPropertyFloat() : base(0)
+        { }
+        public ExhaustibleNumericalPropertyFloat(float i_Value) : base(i_Value)
+        { }
+    }
 
     public class ExhaustibleNumericalPropertyLong<TContext, TModifierReader> : ExhaustibleNumericalProperty<long, TContext, TModifierReader> where TModifierReader : INumericalPropertyModifierReader<long>
     {
@@ -30,7 +40,12 @@ namespace Common.Properties.Numerical.Specialisations
         { }
     }
     public class ExhaustibleNumericalPropertyLong<TContext> : ExhaustibleNumericalPropertyLong<TContext, INumericalPropertyModifierReader<long>>
-    { }
+    {
+        public ExhaustibleNumericalPropertyLong() : base(0)
+        { }
+        public ExhaustibleNumericalPropertyLong(long i_Value) : base(i_Value)
+        { }
+    }
 
     public class ExhaustibleNumericalPropertyDouble<TContext, TModifierReader> : ExhaustibleNumericalProperty<double, TContext, TModifierReader> where TModifierReader : INumericalPropertyModifierReader<double>
     {
@@ -40,5 +55,10 @@ namespace Common.Properties.Numerical.Specialisations
         { }
     }
     public class ExhaustibleNumericalPropertyDouble<TContext> : ExhaustibleNumericalPropertyDouble<TContext, INumericalPropertyModifierReader<double>>
-    { }
+    {
+        public ExhaustibleNumericalPropertyDouble() : base(0)
+        { }
+        public ExhaustibleNumericalPropertyDouble(double i_Value) : base(i_Value)
+        { }
+    }
 }

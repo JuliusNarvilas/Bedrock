@@ -1,4 +1,16 @@
-﻿using Common.Properties.Numerical.Data;
+﻿
+#if (NUMERICAL_PROPERTY_LOGGING_OFF)
+#undef NUMERICAL_PROPERTY_LOGGING
+
+#elif (!NUMERICAL_PROPERTY_LOGGING)
+
+#if (DEBUG)
+#define NUMERICAL_PROPERTY_LOGGING
+#endif
+
+#endif
+
+using Common.Properties.Numerical.Data;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -261,9 +273,9 @@ namespace Common.Properties.Numerical
         {
             if(m_DataZero.CompareTo(m_Value) >= 0)
             {
-                return m_Value;
+                return m_DataZero.Get();
             }
-            return m_DataZero.Get();
+            return m_Value;
         }
 
         /// <summary>
@@ -354,6 +366,16 @@ namespace Common.Properties.Numerical
         }
 
         /// <summary>
+        /// Creates a change bundle for this property instance.
+        /// </summary>
+        /// <param name="i_Context">The context changes.</param>
+        /// <returns>New <see cref="ChangeBundle"/> instance for this property.</returns>
+        public ChangeBundle CreateChangeBundle(TContext i_Context = default(TContext))
+        {
+            return new ChangeBundle(this, i_Context);
+        }
+
+        /// <summary>
         /// Instance update logic that can be overriden and customised.
         /// </summary>
         /// <param name="i_ChangeTypeMask">A mask of change type flags describing this update event.</param>
@@ -405,7 +427,10 @@ namespace Common.Properties.Numerical
                 midifier.Update(ref i_EventData);
             }
             m_FinalModifier = i_EventData.NewModifier;
-            Debug.WriteLine("Numerical property final modifier updated from {0} to {1}.", i_EventData.OldModifier, i_EventData.NewModifier);
+
+#if (NUMERICAL_PROPERTY_LOGGING)
+            UnityEngine.Debug.Log(string.Format("Numerical property final modifier updated from {0} to {1}.", i_EventData.OldModifier, i_EventData.NewModifier));
+#endif
         }
 
         /// <summary>
@@ -417,7 +442,10 @@ namespace Common.Properties.Numerical
             m_DataZero.Add(m_FinalModifier);
             m_Value = m_DataZero.Get();
             m_DataZero.ToZero();
-            Debug.WriteLine("Numerical property value updated to {0}: {1} + {2}.", m_Value, m_BaseValue, m_FinalModifier);
+
+#if (NUMERICAL_PROPERTY_LOGGING)
+            UnityEngine.Debug.Log(string.Format("Numerical property value updated to {0}: {1} + {2}.", m_Value, m_BaseValue, m_FinalModifier));
+#endif
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Common.Events;
+using Common.Properties.Numerical.Specialisations;
 
 public class SelectionManagerBehaviour : MonoBehaviour
 {
@@ -39,6 +40,10 @@ public class SelectionManagerBehaviour : MonoBehaviour
         {
             s_Instance = this;
         }
+
+        NumericalPropertyInt<int> numericalProperty = new NumericalPropertyInt<int>(-10);
+        var modifier = new NumericalPropertyIntModifier<int>(5, 0);
+        numericalProperty.AddModifier(modifier);
     }
 
     private bool DeselectOld(GameObject i_HitGameObject)

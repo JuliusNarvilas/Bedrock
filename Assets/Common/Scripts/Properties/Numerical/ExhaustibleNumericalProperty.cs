@@ -1,5 +1,17 @@
-﻿using Common.Properties.Numerical.Data;
-using System.Diagnostics;
+﻿
+#if (NUMERICAL_PROPERTY_LOGGING_OFF)
+#undef NUMERICAL_PROPERTY_LOGGING
+
+#elif (!NUMERICAL_PROPERTY_LOGGING)
+
+#if (DEBUG)
+#define NUMERICAL_PROPERTY_LOGGING
+#endif
+
+#endif
+
+using Common.Properties.Numerical.Data;
+using UnityEngine;
 
 namespace Common.Properties.Numerical
 {
@@ -88,7 +100,10 @@ namespace Common.Properties.Numerical
             m_DataZero.Substract(m_Depletion);
             m_Value = m_DataZero.Get();
             m_DataZero.ToZero();
-            Debug.WriteLine("Numerical property value updated to {0}: {1} + {2} - {3}.", m_Value, m_BaseValue, m_FinalModifier, m_Depletion);
+
+#if (NUMERICAL_PROPERTY_LOGGING)
+            Debug.Log(string.Format("Numerical property value updated to {0}: {1} + {2} - {3}.", m_Value, m_BaseValue, m_FinalModifier, m_Depletion));
+#endif
         }
 
         protected override void UpdateInternal(ENumericalPropertyChangeType i_ChangeTypeMask, TContext i_Context)

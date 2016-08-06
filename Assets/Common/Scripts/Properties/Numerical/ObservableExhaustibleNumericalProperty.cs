@@ -1,5 +1,17 @@
-﻿using Common.Properties.Numerical.Data;
-using System.Diagnostics;
+﻿
+#if (NUMERICAL_PROPERTY_LOGGING_OFF)
+#undef NUMERICAL_PROPERTY_LOGGING
+
+#elif (!NUMERICAL_PROPERTY_LOGGING)
+
+#if (DEBUG)
+#define NUMERICAL_PROPERTY_LOGGING
+#endif
+
+#endif
+
+using Common.Properties.Numerical.Data;
+using UnityEngine;
 
 namespace Common.Properties.Numerical
 {
@@ -54,8 +66,9 @@ namespace Common.Properties.Numerical
 
         protected void FireChangeEvent(ref NumericalPropertyChangeEventStruct<TNumerical, TContext, TModifierReader> i_EventData)
         {
-            Debug.WriteLine("Numerical property change event fired.");
-
+#if (NUMERICAL_PROPERTY_LOGGING)
+            Debug.Log("Numerical property change event fired.");
+#endif
             if (ChangeSubscription != null)
             {
                 ChangeSubscription(ref i_EventData);
