@@ -116,7 +116,7 @@ namespace Common.Tests.Properties.Numerical.Data
             propertyDataValue.Divide(randomNumberSource2);
 
             float divided = propertyDataValue.Get();
-            Assert.That(divided.EqualsWithMarginF(randomNumberSource1 / randomNumberSource2));
+            Assert.That(divided.EqualsF(randomNumberSource1 / randomNumberSource2));
         }
 
     }

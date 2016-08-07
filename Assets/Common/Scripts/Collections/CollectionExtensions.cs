@@ -30,6 +30,33 @@ namespace Common.Collections
         }
 
         /// <summary>
+        /// Helper function that swaps erasing element with the back element and then erases the back.
+        /// </summary>
+        /// <remarks>
+        /// This function helps avoid array rearrangements but is only useful for collections where element order does not matter.
+        /// </remarks>
+        /// <typeparam name="T">List element type.</typeparam>
+        /// <param name="i_List">List container.</param>
+        /// <param name="i_Element">Element to erase.</param>
+        public static void RemoveSwap<T>(this IList<T> i_List, T i_Element)
+        {
+            Debug.Assert(i_List != null, "Invalid null parameter.");
+
+            int size = i_List.Count;
+            if (size > 0)
+            {
+                int index = i_List.IndexOf(i_Element);
+                if (index >= 0)
+                {
+                    int lastIndex = size - 1;
+                    T temp = i_List[lastIndex];
+                    i_List.RemoveAt(lastIndex);
+                    i_List[index] = temp;
+                }
+            }
+        }
+
+        /// <summary>
         /// Performs insertion sort on the array.
         /// </summary>
         /// <typeparam name="T">Array element type.</typeparam>
