@@ -9,9 +9,7 @@ namespace Common.Threading
         protected Thread m_Thread = null;
 
         public ThreadedJob()
-        {
-            m_Thread = new System.Threading.Thread(Run);
-        }
+        { }
 
         public bool IsDone
         {
@@ -33,15 +31,35 @@ namespace Common.Threading
             }
         }
 
-        public virtual void Start()
+        public void ThreadPoolCallback(object i_State)
         {
+            Start(false);
+        }
+
+        public virtual void Start(bool i_Threaded = true)
+        {
+            if (!IsDone)
+            {
+                Abort();
+            }
             IsDone = false;
-            m_Thread.Start();
+            if (i_Threaded)
+            {
+                m_Thread = new Thread(Run);
+                m_Thread.Start();
+            }
+            else
+            {
+                Run();
+            }
         }
 
         public virtual void Abort()
         {
-            m_Thread.Abort();
+            if (m_Thread != null)
+            {
+                m_Thread.Abort();
+            }
             IsDone = true;
         }
 

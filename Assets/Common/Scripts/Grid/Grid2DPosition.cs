@@ -8,7 +8,7 @@ namespace Common.Grid
         public readonly int X;
         public readonly int Y;
 
-        public Grid2DPosition(int i_IndexX, int i_IndexY)
+        public Grid2DPosition(int i_IndexX = 0, int i_IndexY = 0)
         {
             Debug.Assert(i_IndexX >= 0);
             Debug.Assert(i_IndexY >= 0);
