@@ -1,74 +1,71 @@
-﻿using System.Threading;
+﻿using System;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Common.Threading
 {
-    public class ThreadedJob
+    public enum ThreadedJobState
     {
-        private bool m_IsDone = false;
-        protected object m_Handle = new object();
-        protected Thread m_Thread = null;
+        InProgress,
+        Aborted,
+        Succeeded,
+        Errored
+    }
 
-        public ThreadedJob()
-        { }
+    public class ThreadedJob<TResult>
+    {
+        protected readonly Thread m_Thread;
+        protected Func<TResult> m_RunFunc = null;
+        protected ThreadedJobState m_State = ThreadedJobState.InProgress;
+        protected TResult m_Result = default(TResult);
+        protected Exception m_Exception = null;
 
-        public bool IsDone
+        public ThreadedJob(Func<TResult> i_Function)
         {
-            get
-            {
-                bool tmp;
-                lock (m_Handle)
-                {
-                    tmp = m_IsDone;
-                }
-                return tmp;
-            }
-            protected set
-            {
-                lock (m_Handle)
-                {
-                    m_IsDone = value;
-                }
-            }
+            Debug.Assert(i_Function != null, "invalid Function argument.");
+            m_RunFunc = i_Function;
+
+            m_Thread = new Thread(Run);
+            m_Thread.Start();
         }
 
-        public void ThreadPoolCallback(object i_State)
+        public ThreadedJobState State
         {
-            Start(false);
+            get { return m_State; }
         }
 
-        public virtual void Start(bool i_Threaded = true)
+        public Exception GetException()
         {
-            if (!IsDone)
+            return m_Exception;
+        }
+
+        public TResult GetResult()
+        {
+            if (m_State == ThreadedJobState.InProgress)
             {
-                Abort();
+                m_Thread.Join();
             }
-            IsDone = false;
-            if (i_Threaded)
-            {
-                m_Thread = new Thread(Run);
-                m_Thread.Start();
-            }
-            else
-            {
-                Run();
-            }
+            return m_Result;
         }
 
         public virtual void Abort()
         {
-            if (m_Thread != null)
-            {
-                m_Thread.Abort();
-            }
-            IsDone = true;
+            m_Thread.Abort();
+            m_State = ThreadedJobState.Aborted;
         }
-
-        protected virtual void ThreadFunction() { }
 
         protected virtual void Run()
         {
-            ThreadFunction();
-            IsDone = true;
+            try
+            {
+                m_Result = m_RunFunc();
+                m_State = ThreadedJobState.Succeeded;
+            }
+            catch(Exception e)
+            {
+                m_Exception = e;
+                m_State = ThreadedJobState.Errored;
+            }
         }
     }
 }

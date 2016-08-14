@@ -1,5 +1,6 @@
 ﻿
 using Common.Grid.TerrainType;
+using System;
 using System.Runtime.Serialization;
 
 namespace Common.Grid
@@ -27,9 +28,12 @@ namespace Common.Grid
 
         public override string ToString()
         {
-            return "{ Position: " + Position.ToString() + "\n" +
-                "Data: "+ Data.ToString() +
-                "\n}";
+            return string.Format(
+                "{ Position: {1} {0} Data: {2} {0}}",
+                Environment.NewLine,
+                Position.ToString(),
+                Data.ToString()
+                );
         }
     }
 }

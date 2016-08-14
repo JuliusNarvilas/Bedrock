@@ -19,7 +19,7 @@ namespace Common.Grid.TerrainType
                 string.Format("Invalid index argument: {0}. Expected range: [{1};{2}]", i_Index, byte.MinValue, byte.MaxValue));
             Debug.Assert(
                 i_Cost.IsInRange(-1, sbyte.MaxValue),
-                string.Format("Invalid cost argument: {0}. Expected range: [{1};{2}]", i_Cost, -1, sbyte.MaxValue));
+                string.Format("Invalid cost argument: {0}. Expected range: [{1};{2}]", i_Cost, -1, short.MaxValue));
             Debug.Assert(
                 !string.IsNullOrEmpty(i_Name),
                 "Invalid name argument.");
@@ -32,7 +32,7 @@ namespace Common.Grid.TerrainType
 
         protected TerrainTypeData(SerializationInfo info, StreamingContext context)
         {
-            Cost = info.GetSByte("cost");
+            Cost = info.GetInt16("cost");
             Index = info.GetByte("index");
             Name = info.GetString("name");
             UserData = (TUserData)info.GetValue("userData", typeof(TUserData));
@@ -50,7 +50,7 @@ namespace Common.Grid.TerrainType
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("cost", (sbyte)Cost);
+            info.AddValue("cost", (short)Cost);
             info.AddValue("index", (byte)Index);
             info.AddValue("name", Name);
             info.AddValue("userData", UserData);

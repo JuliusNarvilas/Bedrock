@@ -1,25 +1,30 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace Common.Grid
 {
     public struct Grid2DPosition
     {
-        public readonly int X;
-        public readonly int Y;
+        public readonly ushort X;
+        public readonly ushort Y;
 
         public Grid2DPosition(int i_IndexX = 0, int i_IndexY = 0)
         {
-            Debug.Assert(i_IndexX >= 0);
-            Debug.Assert(i_IndexY >= 0);
+            Debug.Assert(
+                MathHelper.InRange(0, ushort.MaxValue, i_IndexX),
+                "X index out of range"
+                );
+            Debug.Assert(
+                MathHelper.InRange(0, ushort.MaxValue, i_IndexY),
+                "Y index out of range"
+                );
 
-            X = i_IndexX;
-            Y = i_IndexY;
+            X = (ushort)i_IndexX;
+            Y = (ushort)i_IndexY;
         }
 
         public override string ToString()
         {
-            return "{ X: " + X + "; Y: " + Y + "}";
+            return string.Format("{ X: {0}; Y: {1}}", X, Y);
         }
     }
 }

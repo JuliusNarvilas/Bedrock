@@ -1,6 +1,5 @@
 ﻿using Common.Collections;
 using Common.Grid.TerrainType;
-using Common.Threading;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
@@ -16,16 +15,40 @@ namespace Common.Grid
             Closed
         }
 
+        /// <summary>
+        /// Class for internal <see cref="Grid2D{TGridTileData, TTerrainData}"/> tile data for path finding
+        /// </summary>
         protected class GridElement
         {
+            /// <summary>
+            /// The tile data that is accessible to users.
+            /// </summary>
             public Grid2DTile<TGridTileData, TTerrainData> Tile;
-            public int HeuristicDistance;
-            public int PathCost;
-            public int FValue;
-            public int PathTileIndex;
+            /// <summary>
+            /// The approximate distance to the destination (must not be an underestimate).
+            /// </summary>
+            public ushort HeuristicDistance;
+            /// <summary>
+            /// The path cost so far.
+            /// </summary>
+            public ushort PathCost;
+            /// <summary>
+            /// The estimated path cost to the destination.
+            /// </summary>
+            public ushort FValue;
+            /// <summary>
+            /// This element's index of the path sequence.
+            /// </summary>
+            public ushort PathTileIndex;
+            /// <summary>
+            /// Current pathing inspection state.
+            /// </summary>
             public GridPathingState PathingState;
-            public GridElement Parent;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="GridElement"/> class.
+            /// </summary>
+            /// <param name="i_Tile">The tile data.</param>
             public GridElement(Grid2DTile<TGridTileData, TTerrainData> i_Tile)
             {
                 Debug.Assert(i_Tile != null, "Tile argument invalid.");
@@ -33,15 +56,17 @@ namespace Common.Grid
                 Reset();
             }
 
+            /// <summary>
+            /// Method for cleaning up pathing data back to default state.
+            /// </summary>
             public void Reset()
             {
+                Tile.Reset();
                 HeuristicDistance = 0;
                 PathCost = 0;
                 FValue = 0;
+                PathTileIndex = 0;
                 PathingState = GridPathingState.New;
-                PathTileIndex = -1;
-                Parent = null;
-                Tile.Reset();
             }
         }
 
@@ -60,10 +85,10 @@ namespace Common.Grid
 
         public class Grid2DPath
         {
-            private Grid2D<TGridTileData, TTerrainData> m_Grid = null;
-            private List<GridElement> m_OpenList = new List<GridElement>();
-            private List<GridElement> m_ClosedList = new List<GridElement>();
-            private List<Grid2DTile<TGridTileData, TTerrainData>> m_PathTileList = new List<Grid2DTile<TGridTileData, TTerrainData>>();
+            private readonly Grid2D<TGridTileData, TTerrainData> m_Grid;
+            private readonly List<GridElement> m_OpenList = new List<GridElement>();
+            private readonly List<GridElement> m_ClosedList = new List<GridElement>();
+            private readonly List<Grid2DTile<TGridTileData, TTerrainData>> m_PathTileList = new List<Grid2DTile<TGridTileData, TTerrainData>>();
             int m_PathCost = -1;
 
             List<GridElement> m_ConnectedList = new List<GridElement>();
@@ -97,63 +122,75 @@ namespace Common.Grid
                 get { return m_PathCost; }
             }
 
-
-            public Grid2DPath(Grid2D<TGridTileData, TTerrainData> i_Grid, Grid2DPosition i_StartPos, Grid2DPosition i_FinishPos)
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Grid2DPath"/> class, creating a tile sequence for quickest path between given positions.
+            /// </summary>
+            /// <param name="i_Grid">The i_ grid.</param>
+            /// <param name="i_StartPos">The i_ start position.</param>
+            /// <param name="i_EndPosition">The i_ end position.</param>
+            public Grid2DPath(Grid2D<TGridTileData, TTerrainData> i_Grid, Grid2DPosition i_StartPos, Grid2DPosition i_EndPosition)
             {
                 Debug.Assert(i_Grid != null, "Invalid grid argument.");
                 m_Grid = i_Grid;
-                m_FinishElement = m_Grid.GetElement(i_FinishPos);
+                m_FinishElement = m_Grid.GetElement(i_EndPosition);
 
-                //if finish exists
-                if(m_FinishElement != null)
+                //Only one grid path can be computed at a time because of the pathing data cached in the grid elements.
+                lock (m_Grid.m_PathingLockHandle)
                 {
-                    GridElement currentElement = m_Grid.GetElement(i_StartPos);
-                    //while a path option exists and finish not reached
-                    while ((currentElement != null) && (currentElement != m_FinishElement))
+                    //if finish exists
+                    if (m_FinishElement != null)
                     {
-                        Close(currentElement);
-                        OpenNeighbours(currentElement);
-                        currentElement = PickNext();
+                        GridElement startElement = m_Grid.GetElement(i_StartPos);
+                        GridElement currentElement = startElement;
+                        //while a path option exists and finish not reached
+                        while ((currentElement != null) && (currentElement != m_FinishElement))
+                        {
+                            Close(currentElement);
+                            OpenNeighbours(currentElement);
+                            currentElement = PickNext();
+                        }
+                        //Close the finishing tile if it was opened (it was reached) or it is also the starting point
+                        if ((startElement == m_FinishElement) || (m_FinishElement.PathingState == GridPathingState.Opened))
+                        {
+                            Close(m_FinishElement);
+                        }
                     }
-                    Close(m_FinishElement);
-                }
 
-                Finish();
+                    Finish();
+                }
             }
 
             private void Open(GridElement i_Element, GridElement i_Parent)
             {
-                TerrainTypeData<TTerrainData> terrainTypeData = m_Grid.GetTerrainTypeManager().Get(i_Element.Tile.TerrainType);
+                TerrainTypeData<TTerrainData> terrainTypeData = m_Grid.TerrainTypeManager.Get(i_Element.Tile.TerrainType);
                 // move terrain cost
                 int terrainCost = i_Element.Tile.GetCost(i_Parent.Tile, terrainTypeData);
                 if (terrainCost >= 0)
                 {
-                    i_Element.Parent = i_Parent;
                     i_Element.HeuristicDistance = m_Grid.GetHeuristicDistance(i_Element.Tile.Position, m_FinishElement.Tile.Position);
-                    i_Element.PathCost = terrainCost + i_Parent.PathCost; //cost of the path so far
-                    i_Element.FValue = i_Element.PathCost + i_Element.HeuristicDistance;
+                    i_Element.PathCost = (ushort)(terrainCost + i_Parent.PathCost); //cost of the path so far
+                    i_Element.FValue = (ushort)(i_Element.PathCost + i_Element.HeuristicDistance);
 
                     i_Element.PathingState = GridPathingState.Opened;
-                    i_Element.PathTileIndex = i_Parent.PathTileIndex + 1;
+                    i_Element.PathTileIndex = (ushort)(i_Parent.PathTileIndex + 1);
                     m_OpenList.Add(i_Element);
                 }
             }
 
             private bool Reopen(GridElement i_Element, GridElement i_Parent)
             {
-                TerrainTypeData<TTerrainData> terrainTypeData = m_Grid.GetTerrainTypeManager().Get(i_Element.Tile.TerrainType);
+                TerrainTypeData<TTerrainData> terrainTypeData = m_Grid.TerrainTypeManager.Get(i_Element.Tile.TerrainType);
                 // move terrain cost
                 int terrainCost = i_Element.Tile.GetCost(i_Parent.Tile, terrainTypeData);
                 //negative cost indicates blockers
                 if(terrainCost >= 0)
                 {
-                    int newPathCost = terrainCost + i_Parent.PathCost;
+                    int newPathCost = (terrainCost + i_Parent.PathCost);
                     if (newPathCost < i_Element.PathCost)
                     {
-                        i_Element.Parent = i_Parent;
-                        i_Element.PathCost = newPathCost;
-                        i_Element.FValue = newPathCost + i_Element.HeuristicDistance;
-                        i_Element.PathTileIndex = i_Parent.PathTileIndex + 1;
+                        i_Element.PathCost = (ushort)newPathCost;
+                        i_Element.FValue = (ushort)(newPathCost + i_Element.HeuristicDistance);
+                        i_Element.PathTileIndex = (ushort)(i_Parent.PathTileIndex + 1);
                         return true;
                     }
                 }
@@ -162,14 +199,15 @@ namespace Common.Grid
 
             private void Close(GridElement i_Element)
             {
+                int closedListSize = m_ClosedList.Count;
                 //clean tiles no longer in use
-                if(i_Element.PathTileIndex >= m_ClosedList.Count)
+                if(i_Element.PathTileIndex > closedListSize)
                 {
-                    for(int i = i_Element.PathTileIndex; i < m_ClosedList.Count; ++i)
+                    for(int i = i_Element.PathTileIndex; i < closedListSize; ++i)
                     {
                         m_ClosedList[i].Reset();
                     }
-                    m_ClosedList.RemoveRange(i_Element.PathTileIndex, m_ClosedList.Count - i_Element.PathTileIndex);
+                    m_ClosedList.RemoveRange(i_Element.PathTileIndex, closedListSize - i_Element.PathTileIndex);
                 }
                 i_Element.PathingState = GridPathingState.Closed;
                 m_ClosedList.Add(i_Element);
@@ -179,21 +217,22 @@ namespace Common.Grid
             {
                 m_Grid.GetConnected(i_Element.Tile.Position, m_ConnectedList);
 
-                bool requireSorting = false;
+                int openListSizeBefore = m_OpenList.Count;
+                bool oldElementChanged = false;
                 foreach (GridElement neighbourElement in m_ConnectedList)
                 {
                     switch (neighbourElement.PathingState)
                     {
                         case GridPathingState.New:
                             Open(neighbourElement, i_Element);
-                            requireSorting = true;
                             break;
                         case GridPathingState.Opened:
-                            requireSorting = requireSorting || Reopen(neighbourElement, i_Element);
+                            bool changed = Reopen(neighbourElement, i_Element);
+                            oldElementChanged = oldElementChanged || changed;
                             break;
                     }
                 }
-                if(requireSorting)
+                if(oldElementChanged || (openListSizeBefore > m_ClosedList.Count))
                 {
                     m_OpenList.InsertionSort(GridElementFValueDescendingComparer.Instance);
                 }
@@ -204,7 +243,7 @@ namespace Common.Grid
             {
                 int pathTileCount = m_ClosedList.Count;
                 //if finish exists and was reached
-                if ((m_FinishElement != null) && (m_FinishElement.PathTileIndex >= 0))
+                if ((m_FinishElement != null) && (m_FinishElement.PathingState == GridPathingState.Closed))
                 {
                     m_PathCost = m_FinishElement.PathCost;
                     m_PathTileList.Capacity = pathTileCount;
@@ -248,60 +287,54 @@ namespace Common.Grid
                 return pick;
             }
         }
+        
 
-        public class Grid2DPathThreadedJob : ThreadedJob
-        {
-            private Grid2DPosition m_StartPos;
-            private Grid2DPosition m_FinishPos;
-            private Grid2D<TGridTileData, TTerrainData> m_Grid;
-            public Grid2DPath Path { get; private set; }
-
-            public Grid2DPathThreadedJob(Grid2D<TGridTileData, TTerrainData> i_Grid, Grid2DPosition i_StartPos, Grid2DPosition i_FinishPos)
-            {
-                m_Grid = i_Grid;
-                m_StartPos = i_StartPos;
-                m_FinishPos = i_FinishPos;
-                Path = null;
-            }
-
-            protected override void ThreadFunction()
-            {
-                Path = new Grid2DPath(m_Grid, m_StartPos, m_FinishPos);
-            }
-        }
-
-
+        protected readonly object m_PathingLockHandle = new object();
         protected readonly TerrainTypeManager<TTerrainData> m_TerrainTypeManager;
 
+        /// <summary>
+        /// Gets the terrain type manager.
+        /// </summary>
+        /// <value>
+        /// The terrain type manager.
+        /// </value>
+        public TerrainTypeManager<TTerrainData> TerrainTypeManager
+        {
+            get { return m_TerrainTypeManager; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Grid2D{TGridTileData, TTerrainData}"/> class.
+        /// </summary>
         public Grid2D()
         {
             m_TerrainTypeManager = new TerrainTypeManager<TTerrainData>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Grid2D{TGridTileData, TTerrainData}"/> class.
+        /// </summary>
+        /// <param name="i_TerrainTypeManager">The terrain type manager.</param>
         public Grid2D(TerrainTypeManager<TTerrainData> i_TerrainTypeManager)
         {
-            Debug.Assert(i_TerrainTypeManager != null, "Invalid null argument.");
+            Debug.Assert(i_TerrainTypeManager != null, "Invalid TerrainTypeManager argument.");
             m_TerrainTypeManager = i_TerrainTypeManager;
         }
 
-        public TerrainTypeManager<TTerrainData> GetTerrainTypeManager()
+        /// <summary>
+        /// Gets the path.
+        /// </summary>
+        /// <param name="i_Start">The start position.</param>
+        /// <param name="i_End">The end position.</param>
+        /// <returns></returns>
+        public Grid2DPath GetPath(Grid2DPosition i_Start, Grid2DPosition i_End)
         {
-            return m_TerrainTypeManager;
-        }
-
-        public Grid2DPath GetPath(Grid2DPosition i_Start, Grid2DPosition i_Finish)
-        {
-            return new Grid2DPath(this, i_Start, i_Finish);
-        }
-
-        public Grid2DPathThreadedJob GetPathJob(Grid2DPosition i_Start, Grid2DPosition i_Finish)
-        {
-            return new Grid2DPathThreadedJob(this, i_Start, i_Finish);
+            return new Grid2DPath(this, i_Start, i_End);
         }
 
         public abstract Grid2DTile<TGridTileData, TTerrainData> GetTile(Grid2DPosition i_Position);
 
-        public abstract int GetHeuristicDistance(Grid2DPosition from, Grid2DPosition to);
+        public abstract ushort GetHeuristicDistance(Grid2DPosition i_From, Grid2DPosition i_To);
 
         protected abstract void GetConnected(Grid2DPosition i_Position, List<GridElement> o_ConnectedElements);
 

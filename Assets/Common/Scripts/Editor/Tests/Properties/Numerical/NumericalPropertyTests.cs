@@ -121,7 +121,7 @@ namespace Common.Tests.Properties.Numerical
             var modifier3 = new NumericalPropertyIntModifier<int>(7, 3);
             numericalProperty.AddModifier(modifier1);
             numericalProperty.AddModifier(modifier2);
-            numericalProperty.AddModifier(modifier2);
+            numericalProperty.AddModifier(modifier3);
             numericalProperty.RemoveModifier(modifier1);
             INumericalPropertyModifierReader<int> returnModifier = numericalProperty.GetModifier(0);
 

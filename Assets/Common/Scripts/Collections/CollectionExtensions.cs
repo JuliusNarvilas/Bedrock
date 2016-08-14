@@ -102,14 +102,15 @@ namespace Common.Collections
                 int readIndex = index - 1;
                 T examinedValue = i_List[index];
                 //early break test for quicker processing of almost sorted arrays
-                if (comparer.Compare(i_List[readIndex], examinedValue) > 0)
+                bool requireSort = comparer.Compare(i_List[readIndex], examinedValue) > 0;
+                if (requireSort)
                 {
-                    while ((readIndex >= 0) && (comparer.Compare(i_List[readIndex], examinedValue) > 0))
+                    while (requireSort)
                     {
                         i_List[readIndex + 1] = i_List[readIndex];
-                        --readIndex;
+                        requireSort = (readIndex > 0) && comparer.Compare(i_List[--readIndex], examinedValue) > 0;
                     }
-                    i_List[readIndex + 1] = examinedValue;
+                    i_List[readIndex] = examinedValue;
                 }
             }
         }
