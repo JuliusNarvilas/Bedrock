@@ -52,9 +52,6 @@ namespace Common.Tests.Properties.Numerical
             numericalProperty.Deplete(2);
             numericalProperty.Deplete(3);
 
-            int test = numericalProperty.GetFinalModifier();
-
-
             var evenetUpdateTest = new NumericalPropertyIntTestEventDataModifier(11, 5);
             numericalProperty.AddModifier(evenetUpdateTest);
 

@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Collections;
 
+
 public class TestPrefab : MonoBehaviour {
+
+    public TestList test;
+    //public List<TestListElement> test2;
 
     public GameObject prefab;
     public GameObject popupContainer;
