@@ -35,11 +35,13 @@ public class TextPic : Text, IPointerClickHandler, IPointerExitHandler, IPointer
         UpdateQuadImage();
     }
 
+    /*
     protected override void OnValidate()
     {
         base.OnValidate();
         UpdateQuadImage();
     }
+    */
 
     /// <summary>
     /// After parsing the final text

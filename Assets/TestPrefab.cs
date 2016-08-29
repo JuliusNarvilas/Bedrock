@@ -24,7 +24,6 @@ public class TestPrefab : MonoBehaviour {
 	void Start ()
     {
         OnMigratedCallback();
-        Debug.Log("");
     }
 
     void OnMigratedCallback()
