@@ -7,16 +7,16 @@ namespace Common.Text
     {
         private struct ImageIdHashPredicate
         {
-            private readonly IntelligentTextId m_Id;
+            private readonly HashedString m_Id;
 
-            public ImageIdHashPredicate(IntelligentTextId i_Id)
+            public ImageIdHashPredicate(HashedString i_Id)
             {
                 m_Id = i_Id;
             }
 
             public ImageIdHashPredicate(string i_Id)
             {
-                m_Id = new IntelligentTextId(i_Id);
+                m_Id = new HashedString(i_Id);
             }
 
             public bool Match(IntelligentTextAsset i_Other)
@@ -50,10 +50,10 @@ namespace Common.Text
         void Awake()
         {
             int imageCountBefore = m_GloabalImages.Count;
-            for(int i = imageCountBefore; i >=0; --i)
+            for(int i = imageCountBefore - 1; i >=0; --i)
             {
                 IntelligentTextAsset currentItem = m_GloabalImages[i];
-                if(string.IsNullOrEmpty(currentItem.FileReference.FilePath) || string.IsNullOrEmpty(currentItem.Id.Name))
+                if(string.IsNullOrEmpty(currentItem.FileReference.FilePath) || string.IsNullOrEmpty(currentItem.Id.Text))
                 {
                     m_GloabalImages.RemoveAt(i);
                 }

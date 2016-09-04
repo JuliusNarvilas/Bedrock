@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Common.Text
 {
-    [CustomPropertyDrawer(typeof(IntelligentTextId))]
+    [CustomPropertyDrawer(typeof(HashedString))]
     public class IntelligentTextIdDrawer : PropertyDrawer
     {
         private Rect m_ContentArea;
@@ -16,15 +16,15 @@ namespace Common.Text
             EditorGUI.BeginProperty(m_ContentArea, label, prop);
             m_ContentArea.height = EditorGUIExtensions.DEFAULT_GUI_HEIGHT;
 
-            SerializedProperty idProperty = prop.FindPropertyRelative("Name");
-            if (idProperty != null)
+            SerializedProperty textProperty = prop.FindPropertyRelative("Text");
+            if (textProperty != null)
             {
-                string newId = EditorGUI.TextField(m_ContentArea, "Id", idProperty.stringValue);
-                idProperty.stringValue = newId;
+                string newText = EditorGUI.TextField(m_ContentArea, "Text", textProperty.stringValue);
+                textProperty.stringValue = newText;
                 SerializedProperty hashProperty = prop.FindPropertyRelative("Hash");
                 if (hashProperty != null)
                 {
-                    hashProperty.intValue = string.IsNullOrEmpty(newId) ? 0 : newId.GetHashCode();
+                    hashProperty.intValue = string.IsNullOrEmpty(newText) ? 0 : newText.GetHashCode();
                 }
             }
             

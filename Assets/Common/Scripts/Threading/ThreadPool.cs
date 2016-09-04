@@ -218,6 +218,8 @@ namespace Common.Threading
         public ThreadPool()
         {
             m_ManagerThread = new Thread(ManagerRun);
+            m_ManagerThread.Name = "ThreadPool Manager";
+            m_ManagerThread.Priority = ThreadPriority.Lowest;
             m_ActiveThreadList.Add(new ThreadPoolJob(this));
         }
 
@@ -262,6 +264,11 @@ namespace Common.Threading
             m_ClosingThreadList.Clear();
         }
 
+
+        /// <summary>
+        /// Gets the ideal estimated thread count for pending tasks.
+        /// </summary>
+        /// <returns></returns>
         private int GetNewThreadCount()
         {
             int lateTaskCount = 0;
@@ -276,7 +283,7 @@ namespace Common.Threading
                     }
                 }
             }
-            lateTaskCount /= 2;
+            lateTaskCount /= 3;
             return lateTaskCount <= 0 ? 1 : lateTaskCount;
         }
 
