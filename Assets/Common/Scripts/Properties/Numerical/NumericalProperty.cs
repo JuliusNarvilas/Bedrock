@@ -422,9 +422,10 @@ namespace Common.Properties.Numerical
         /// <param name="i_EventData">The event data.</param>
         protected void UpdateModifiers(ref NumericalPropertyChangeEventStruct<TNumerical, TContext, TModifierReader> i_EventData)
         {
-            foreach (INumericalPropertyModifier<TNumerical, TContext, TModifierReader> midifier in m_Modifiers)
+            int size = m_Modifiers.Count;
+            for(int i = 0; i < size; ++i)
             {
-                midifier.Update(ref i_EventData);
+                m_Modifiers[i].Update(ref i_EventData);
             }
             m_FinalModifier = i_EventData.NewModifier;
 
@@ -519,14 +520,16 @@ namespace Common.Properties.Numerical
             /// </summary>
             protected virtual void ApplyModifiers()
             {
-                foreach (INumericalPropertyModifier<TNumerical, TContext, TModifierReader> modifier in m_AddModifiers)
+                int size = m_AddModifiers.Count;
+                for (int i = 0; i < size; ++i)
                 {
-                    m_Property.m_Modifiers.Add(modifier);
+                    m_Property.m_Modifiers.Add(m_AddModifiers[i]);
                 }
 
-                foreach (INumericalPropertyModifier<TNumerical, TContext, TModifierReader> modifier in m_RemoveModifiers)
+                size = m_RemoveModifiers.Count;
+                for(int i = 0; i < size; ++i)
                 {
-                    m_Property.m_Modifiers.Remove(modifier);
+                    m_Property.m_Modifiers.Remove(m_RemoveModifiers[i]);
                 }
 
                 if ((m_ChangeTypeMask & ENumericalPropertyChangeType.ModifierAdd) != ENumericalPropertyChangeType.None)

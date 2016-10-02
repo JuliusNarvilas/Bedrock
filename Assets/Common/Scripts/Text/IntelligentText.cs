@@ -4,133 +4,192 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.Xml;
+using System.Collections;
 
 namespace Common.Text
 {
-    [RequireComponent(typeof(MeshFilter))]
+    [RequireComponent(typeof(RectTransform))]
     public class IntelligentText : MonoBehaviour
     {
-        public static readonly string INSERT_TAG = "insert";
-        public static readonly string INSERT_TAG_XPATH = "//" + INSERT_TAG;
-        public static readonly string INSERT_DONE_TAG = "_insert";
-        public static readonly string GROUP_TAG = "group";
-        public static readonly string IMAGE_TAG = "image";
-
-        [SerializeField]
-        protected string m_Text;
-
-        [SerializeField]
-        protected Font m_Font;
-
-        protected Mesh m_Mesh;
-        protected TextGenerator m_TextGenerator;
-        protected MeshRenderer m_MeshRenderer;
-        protected CanvasRenderer m_CanvasRenderer;
-        protected TextGenerationSettings m_TextSettings;
-
-        public static void ParseIntelligentText(string i_Text)
+        protected enum RenderMode
         {
-            //calculate element bounds
+            ConvasRenderer,
+            MeshRenderer,
+            Unknown,
+            Invalid
         }
 
-        public static void ReplaceInsersts(XmlDocument i_Container)
-        {
-            int recursionCount = 0;
-            XmlNodeList elementList = null;
-            do
-            {
-                ++recursionCount;
-                elementList = i_Container.GetElementsByTagName(INSERT_TAG);
+        [SerializeField]
+        [TextArea]
+        protected string m_Text;
+        [SerializeField]
+        protected string m_StyleId;
+        [SerializeField]
+        protected bool m_GenerateOutOfBounds;
+        [SerializeField]
+        protected HorizontalWrapMode m_HorizontalOverflow;
+        [SerializeField]
+        protected bool m_BestFit;
+        [SerializeField]
+        protected float m_ScaleFactor = 1;
+        [SerializeField]
+        protected TextAnchor m_Anchor = TextAnchor.MiddleCenter;
+        [SerializeField]
+        protected VerticalWrapMode m_VerticalOverflow;
 
-                foreach (XmlNode element in elementList)
+        
+        public string Style
+        {
+            get { return m_StyleId; }
+            set
+            {
+                m_StyleId = value;
+                Refresh();
+            }
+        }
+
+        
+        protected RenderMode m_RenderMode = RenderMode.Unknown;
+        protected IntelligentTextParser m_Parser = new IntelligentTextParser();
+
+        public string Text
+        {
+            get { return m_Text; }
+            set
+            {
+                m_Text = value;
+                UpdateText();
+            }
+        }
+
+        private void InitialiseRenderMode()
+        {
+            m_RenderMode = RenderMode.Unknown;
+            if (GetComponent<CanvasRenderer>() != null)
+            {
+                m_RenderMode = RenderMode.ConvasRenderer;
+            }
+            else
+            {
+                if (GetComponent<MeshRenderer>() != null)
                 {
-                    var idAttribute = element.Attributes["id"];
-                    var localizationAttribute = element.Attributes["localization"];
-                    if (localizationAttribute != null && idAttribute != null)
+                    m_RenderMode = RenderMode.MeshRenderer;
+                    var meshFilter = GetComponent<MeshFilter>();
+                    if (meshFilter == null)
                     {
-                        var id = idAttribute.Value;
-                        var localization = localizationAttribute.Value;
-                        if (!string.IsNullOrEmpty(localization) && !string.IsNullOrEmpty(id))
-                        {
-                            var newElement = i_Container.CreateElement(INSERT_DONE_TAG);
-                            //TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                            newElement.InnerXml = "";
-                            element.ParentNode.ReplaceChild(newElement, element);
-                        }
+                        meshFilter = gameObject.AddComponent<MeshFilter>();
                     }
+                    meshFilter.sharedMesh = null;
+                    meshFilter.hideFlags = HideFlags.None;
                 }
             }
-            while (elementList != null && elementList.Count > 0 && recursionCount < 5);
+
+            switch (m_RenderMode)
+            {
+                case RenderMode.ConvasRenderer:
+                case RenderMode.MeshRenderer:
+                    break;
+                case RenderMode.Unknown:
+                    m_RenderMode = RenderMode.ConvasRenderer;
+                    gameObject.AddComponent<CanvasRenderer>();
+                    break;
+            }
         }
 
-        private void Awake()
+        public void UpdateText()
         {
-            m_Mesh = new Mesh();
-            m_TextGenerator = new TextGenerator();
-            m_MeshRenderer = GetComponent<MeshRenderer>();
-            m_CanvasRenderer = GetComponent<CanvasRenderer>();
-            m_TextSettings = new TextGenerationSettings();
+            if(m_RenderMode == RenderMode.Unknown || m_RenderMode == RenderMode.Invalid)
+            {
+                InitialiseRenderMode();
+            }
 
-            /*
+            m_Parser.Parse(m_Text);
+            
+            switch (m_RenderMode)
+            {
+                case RenderMode.ConvasRenderer:
+                    {
+                        var canvasRenderer = GetComponent<CanvasRenderer>();
+                        canvasRenderer.SetMaterial(m_Parser.TextSettings.font.material, null);
+                        canvasRenderer.SetMesh(m_Parser.Mesh);
+                    }
+                    break;
+                case RenderMode.MeshRenderer:
+                    {
+                        var meshFilter = GetComponent<MeshFilter>();
+                        var meshRenderer = GetComponent<MeshRenderer>();
+                        meshFilter.sharedMesh = m_Parser.Mesh;
+                        meshRenderer.sharedMaterial = m_Parser.TextSettings.font.material;
+                    }
+                    break;
+            }
+        }
 
-            System.Xml.XmlDocument doc = new XmlDocument();
-            XmlElement wrapper = doc.CreateElement("wrapper");
-            wrapper.InnerXml = "pre string <insert> inner <insert/> <insert>string</insert> </insert><test testAttribute='true'/> post string";
-            ParseInsersts(wrapper);
-            string testString = doc.ToString();
-            */
+        public void Refresh()
+        {
+            IntelligentTextStyle style = IntelligentTextSettingsManager.GetStyle(m_StyleId);
+            if (style != null)
+            {
+                var transform = GetComponent<RectTransform>();
+
+                m_Parser.TextSettings.color = style.Color;
+                m_Parser.TextSettings.font = style.Font;
+                m_Parser.TextSettings.fontSize = style.FontSize;
+                m_Parser.TextSettings.lineSpacing = style.LineSpacing;
+
+                m_Parser.TextSettings.alignByGeometry = false;
+                m_Parser.TextSettings.fontStyle = FontStyle.Normal;
+                m_Parser.TextSettings.generateOutOfBounds = true;// m_GenerateOutOfBounds;
+                m_Parser.TextSettings.generationExtents = new Vector2(transform.rect.width, transform.rect.height);
+                m_Parser.TextSettings.horizontalOverflow = m_HorizontalOverflow;
+                m_Parser.TextSettings.pivot = new Vector2(0.5f, 0.5f);
+                m_Parser.TextSettings.resizeTextForBestFit = m_BestFit;
+                m_Parser.TextSettings.resizeTextMaxSize = 600;
+                m_Parser.TextSettings.resizeTextMinSize = 6;
+                m_Parser.TextSettings.richText = true;
+                m_Parser.TextSettings.scaleFactor = m_ScaleFactor;
+                m_Parser.TextSettings.textAnchor = m_Anchor;
+                m_Parser.TextSettings.updateBounds = true;
+                m_Parser.TextSettings.verticalOverflow = m_VerticalOverflow;
+
+                UpdateText();
+            }
+            else
+            {
+                Debug.LogErrorFormat("IntelligentText Style not found for id: {0}", m_StyleId);
+            }
+
+        }
+
+        private void OnValidate()
+        {
+            StartCoroutine(AwaitRefresh());
+        }
+
+        private IEnumerator AwaitRefresh()
+        {
+            while (IntelligentTextSettingsManager.Instance == null)
+            {
+                yield return null;
+            }
+            //force re-initialize
+            m_RenderMode = RenderMode.Unknown;
+            Refresh();
         }
 
         private void OnEnable()
         {
-            m_Mesh.name = "Text Mesh";
-            //m_Mesh.hideFlags = HideFlags.HideAndDontSave;
-
-            //m_MeshRenderer.material.mainTexture = m_Font.material.mainTexture;
-
-            m_TextSettings.textAnchor = TextAnchor.MiddleCenter;
-            m_TextSettings.color = Color.red;
-            m_TextSettings.generationExtents = new Vector2(100, 100);
-            m_TextSettings.pivot = new Vector2(0.5f, 0.5f); ;
-            m_TextSettings.richText = true;
-            m_TextSettings.font = m_Font;
-            m_TextSettings.fontSize = 14;
-            m_TextSettings.fontStyle = FontStyle.Normal;
-            m_TextSettings.verticalOverflow = VerticalWrapMode.Overflow;
-            m_TextSettings.horizontalOverflow = HorizontalWrapMode.Wrap;
-            m_TextSettings.lineSpacing = 1;
-            m_TextSettings.generateOutOfBounds = true;
-            m_TextSettings.resizeTextForBestFit = false;
-            m_TextSettings.scaleFactor = 1f;
-
-            //UnityEngine.UI.Text uiText = GetComponentInChildren<UnityEngine.UI.Text>();
-            //var settings = uiText.GetGenerationSettings(new Vector2(100, 100));
-
-            //m_TextGenerator = uiText.cachedTextGenerator;
-            //m_TextGenerator.Populate("Test", settings);
-            m_TextGenerator.Populate("Test yifit tf hfi f iytufdiyt fiytuf iuygf iyufiyyu tfd ytuifdiytfd ", m_TextSettings);
-
-
-
-            m_TextGenerator.GetMesh(m_Mesh);
-
-            if (m_CanvasRenderer != null)
-            {
-                //m_Mesh.ve(m_TextGenerator.verts as List<UIVertex>);
-                m_CanvasRenderer.SetMaterial(m_Font.material, null);
-                m_CanvasRenderer.SetMesh(m_Mesh);
-            }
-            else if (m_MeshRenderer != null)
-            {
-                GetComponent<MeshFilter>().mesh = m_Mesh;
-                m_MeshRenderer.sharedMaterial = m_Font.material;
-            }
-
+            IntelligentTextSettingsManager.RegisterText(this);
+        }
+        
+        private void OnDisable()
+        {
+            IntelligentTextSettingsManager.UnregisterText(this);
         }
 
-        private void Update()
+        private void OnDistroy()
         {
-
+            m_Parser.Dispose();
         }
     }
 }

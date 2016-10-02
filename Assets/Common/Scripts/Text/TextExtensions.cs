@@ -21,6 +21,7 @@ namespace Common.Text
                 tempColours[i] = generatorVerts[i].color;
                 tempUvs[i] = generatorVerts[i].uv0;
             }
+            o_Mesh.Clear();
             o_Mesh.vertices = tempVerts;
             o_Mesh.colors32 = tempColours;
             o_Mesh.uv = tempUvs;

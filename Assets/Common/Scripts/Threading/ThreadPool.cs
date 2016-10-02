@@ -251,15 +251,17 @@ namespace Common.Threading
             }
 
             //force close
-            foreach (ThreadPoolJob job in m_ActiveThreadList)
+            int size = m_ActiveThreadList.Count;
+            for( int i = 0; i < size; ++i)
             {
-                job.Abort();
+                m_ActiveThreadList[i].Abort();
             }
             m_ActiveThreadList.Clear();
 
-            foreach (ThreadPoolJob job in m_ClosingThreadList)
+            size = m_ClosingThreadList.Count;
+            for (int i = 0; i < size; ++i)
             {
-                job.Abort();
+                m_ClosingThreadList[i].Abort();
             }
             m_ClosingThreadList.Clear();
         }
@@ -275,11 +277,17 @@ namespace Common.Threading
             lock (m_ThreadPoolTaskListChangeHandle)
             {
                 DateTime now = DateTime.UtcNow;
-                foreach (ThreadPoolJobTask task in m_Tasks)
+                int size = m_ClosingThreadList.Count;
+                ThreadPoolJobTask task;
+                for (int i = 0; i < size; ++i)
                 {
-                    if((task.ExpectedRunTimestamp - now).Milliseconds > 0)
+                    task = m_ClosingThreadList[i].Task;
+                    if (task != null)
                     {
-                        ++lateTaskCount;
+                        if ((task.ExpectedRunTimestamp - now).TotalMilliseconds > 0)
+                        {
+                            ++lateTaskCount;
+                        }
                     }
                 }
             }

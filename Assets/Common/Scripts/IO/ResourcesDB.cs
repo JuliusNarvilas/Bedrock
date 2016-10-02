@@ -136,9 +136,11 @@ namespace Common.IO
                 if (aOnlyTopFolders)
                     return;
             }
-            foreach (var dir in i_Folder.GetDirectories())
+            var directories = i_Folder.GetDirectories();
+            int size = directories.Length;
+            for (int i = 0; i < size; ++i)
             {
-                ScanFolderForResourcesDirectories(dir, i_List, aOnlyTopFolders);
+                ScanFolderForResourcesDirectories(directories[i], i_List, aOnlyTopFolders);
             }
         }
         private List<DirectoryInfo> FindResourcesFolders(bool aOnlyTopFolders)
@@ -157,14 +159,23 @@ namespace Common.IO
             else
                 relFolder = relFolder.Substring(i_Prefix);
             relFolder = ConvertPath(relFolder);
-            foreach (var folder in i_Folder.GetDirectories())
+
+            var directories = i_Folder.GetDirectories();
+            int size = directories.Length;
+            DirectoryInfo folder;
+            for(int i = 0; i < size; ++i)
             {
+                folder = directories[i];
                 m_Items.Add(new ResourcesDBItem(folder.Name, relFolder, ResourcesDBItem.Type.Folder, string.Empty));
                 AddFileList(folder, i_Prefix);
             }
 
-            foreach (var file in i_Folder.GetFiles())
+            var files = i_Folder.GetFiles();
+            size = files.Length;
+            FileInfo file;
+            for(int i = 0; i < size; ++i)
             {
+                file = files[i];
                 string ext = file.Extension.ToLower();
                 if (ext == ".meta")
                     continue;
@@ -188,8 +199,11 @@ namespace Common.IO
             root.m_Children.Clear();
             var topFolders = FindResourcesFolders(true);
 
-            foreach (var folder in topFolders)
+            int size = topFolders.Count;
+            DirectoryInfo folder;
+            for(int i = 0; i < size; ++i)
             {
+                folder = topFolders[i];
                 string path = folder.FullName;
                 int prefix = path.Length;
                 if (!path.EndsWith("/"))
@@ -198,11 +212,15 @@ namespace Common.IO
             }
             m_FolderCount = 0;
             m_FileCount = 0;
-            foreach (var item in m_Items)
+
+            size = m_Items.Count;
+            ResourcesDBItem.Type resourceType;
+            for (int i = 0; i < size; ++i)
             {
-                if (item.ResourcesType == ResourcesDBItem.Type.Folder)
+                resourceType = m_Items[i].ResourcesType;
+                if (resourceType == ResourcesDBItem.Type.Folder)
                     m_FolderCount++;
-                else if (item.ResourcesType == ResourcesDBItem.Type.Asset)
+                else if (resourceType == ResourcesDBItem.Type.Asset)
                     m_FileCount++;
             }
             if (i_SetDirty)
@@ -226,8 +244,11 @@ namespace Common.IO
         public void OnAfterDeserialize()
         {
             root.m_Children.Clear();
-            foreach (var item in m_Items)
+            int size = m_Items.Count;
+            ResourcesDBItem item;
+            for (int i = 0; i < size; ++i)
             {
+                item = m_Items[i];
                 if (item != null)
                     item.OnDeserialize();
             }
@@ -247,6 +268,7 @@ namespace Common.IO
                 return;
             var files = importedAssets.Concat(deletedAssets).Concat(movedAssets).Concat(movedFromAssetPaths);
             bool update = false;
+
             foreach (var file in files)
             {
                 var fn = file.ToLower();

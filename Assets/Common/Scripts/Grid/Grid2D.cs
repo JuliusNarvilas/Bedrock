@@ -219,8 +219,12 @@ namespace Common.Grid
 
                 int openListSizeBefore = m_OpenList.Count;
                 bool oldElementChanged = false;
-                foreach (GridElement neighbourElement in m_ConnectedList)
+
+                int size = m_ConnectedList.Count;
+                GridElement neighbourElement;
+                for (var i = 0; i < size; ++i)
                 {
+                    neighbourElement = m_ConnectedList[i];
                     switch (neighbourElement.PathingState)
                     {
                         case GridPathingState.New:

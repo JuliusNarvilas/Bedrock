@@ -52,12 +52,18 @@ namespace Common
 
         public static bool IsInRangeF(this float i_Data, float i_Min, float i_Max)
         {
-            return InRange(i_Min, i_Max, i_Data);
+            return InRangeF(i_Min, i_Max, i_Data);
         }
 
         public static bool IsInRange(this double i_Data, double i_Min, double i_Max)
         {
             return InRange(i_Min, i_Max, i_Data);
+        }
+
+        //from http://referencesource.microsoft.com/#mscorlib/system/tuple.cs,9124c4bea9ab0199
+        public static int CombineHashCodes(int i_Hash1, int i_Hash2)
+        {
+            return (((i_Hash1 << 5) + i_Hash1) ^ i_Hash2);
         }
     }
 }
