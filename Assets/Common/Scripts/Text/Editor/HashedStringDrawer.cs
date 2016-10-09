@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Common.Text
 {
     [CustomPropertyDrawer(typeof(HashedString))]
-    public class IntelligentTextIdDrawer : PropertyDrawer
+    public class HashedStringDrawer : PropertyDrawer
     {
         private Rect m_ContentArea;
 

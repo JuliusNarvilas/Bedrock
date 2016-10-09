@@ -7,6 +7,7 @@ namespace Common.IO
 {
     public class ResourcesDB : ScriptableObject, ISerializationCallbackReceiver
     {
+        private static readonly string RESOURCES_STR = "Resources";
         private static ResourcesDB s_Instance = null;
         public static ResourcesDB FindInstance()
         {
@@ -27,9 +28,9 @@ namespace Common.IO
                     return s_Instance;
                 s_Instance = CreateInstance<ResourcesDB>();
 #if UNITY_EDITOR
-                var resDir = new DirectoryInfo(Path.Combine(Application.dataPath, "Resources"));
+                var resDir = new DirectoryInfo(Path.Combine(Application.dataPath, RESOURCES_STR));
                 if (!resDir.Exists)
-                    UnityEditor.AssetDatabase.CreateFolder("Assets", "Resources");
+                    UnityEditor.AssetDatabase.CreateFolder("Assets", RESOURCES_STR);
                 UnityEditor.AssetDatabase.CreateAsset(s_Instance, "Assets/Resources/ResourceDB.asset");
                 s_Instance = FindInstance();
 #endif
@@ -81,12 +82,11 @@ namespace Common.IO
 
         private static int IndexAfterResources(string i_Path, int i_StartingIndex = 0)
         {
-            string reasourcesStr = "resources";
 
-            int indexOfResources = i_Path.IndexOf(reasourcesStr, i_StartingIndex, System.StringComparison.InvariantCultureIgnoreCase);
+            int indexOfResources = i_Path.IndexOf(RESOURCES_STR, i_StartingIndex, System.StringComparison.InvariantCultureIgnoreCase);
             if (indexOfResources >= 0)
             {
-                int resourcesEndIndex = indexOfResources + reasourcesStr.Length;
+                int resourcesEndIndex = indexOfResources + RESOURCES_STR.Length;
                 if((indexOfResources > 0) && (i_Path[indexOfResources - 1] != '/'))
                 {
                     return IndexAfterResources(i_Path, resourcesEndIndex - 1);
@@ -106,6 +106,10 @@ namespace Common.IO
 
         public static ResourcesDBItem GetByPath(string i_Path, ResourcesDBItem.Type i_ResourceType = ResourcesDBItem.Type.Any)
         {
+            if(string.IsNullOrEmpty(i_Path))
+            {
+                return null;
+            }
             int substringStart = IndexAfterResources(i_Path);
             if(substringStart >= 0)
             {

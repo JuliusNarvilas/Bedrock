@@ -20,42 +20,40 @@
     "styles": [
         {
             "id": "Default",
-            "data": {
-                "fontPath": "Fonts/OpenSans-Regular",
-                "fontSize": 20,
-                "color": { "r": 1, "g": 0, "b": 0, "a": 1 },
-                "lineSpacing": 1.0
-            }
+            "fontPath": "Fonts/OpenSans-Regular",
+            "fontSize": 20,
+            "color": { "r": 1, "g": 0, "b": 0, "a": 1 },
+            "lineSpacing": 1.0
         },
         {
             "id": "HeadStyle",
-            "data": {
-                "fontPath": "Fonts/",
-                "fontSize": 20,
-                "color": { "r": 1, "g": 0, "b": 0, "a": 1 },
-                "lineSpacing": 1.0
-            }
+            "fontPath": "Fonts/",
+            "fontSize": 20,
+            "color": { "r": 1, "g": 0, "b": 0, "a": 1 },
+            "lineSpacing": 1.0
         },
         {
             "id": "BodyStyle",
-            "data": {
-                "fontPath": "Fonts/",
-                "fontSize": 16,
-                "color": { "r": 0, "g": 1, "b": 0, "a": 1 },
-                "lineSpacing": 1.0
-            }
+            "fontPath": "Fonts/",
+            "fontSize": 16,
+            "color": { "r": 0, "g": 1, "b": 0, "a": 1 },
+            "lineSpacing": 1.0
         }
     ],
     "images": [
         {
-            "id": "id",
-            "path": ""
+            "id": "image1",
+            "path": "Images/me face",
+            "sprite": "me face 0"
         }
     ],
     "transforms": [
         {
-            "id": "id"
-
+            "id": "transform1",
+            "scale": {"x": 1, "y": 1},
+            "offset": {"x": 0, "y": 0},
+            "rotation": 0,
+            "pivot": 0
         }
     ]
 }

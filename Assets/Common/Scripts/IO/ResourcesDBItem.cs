@@ -39,10 +39,10 @@ namespace Common.IO
         [SerializeField]
         private string m_ObjectTypeName;
 
-        [SerializeField]
+        [System.NonSerialized]
         private int m_RefCount = 0;
 
-        [SerializeField]
+        [System.NonSerialized]
         private List<Object> m_Cache = new List<Object>();
 
         private System.Type m_ObjectType;

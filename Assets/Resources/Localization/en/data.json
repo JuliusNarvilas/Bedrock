@@ -17,18 +17,6 @@
             "data": "text3-2"
         }
     ],
-    "images": [
-        {
-            "id": "id",
-            "path": ""
-        }
-    ],
-    "transforms": [
-        {
-            "id": "id"
-
-        }
-    ],
     "styles": [
         {
             "id": "HeadStyle",

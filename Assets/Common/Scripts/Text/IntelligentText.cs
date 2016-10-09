@@ -127,7 +127,7 @@ namespace Common.Text
 
         public void Refresh()
         {
-            IntelligentTextStyle style = IntelligentTextSettingsManager.GetStyle(m_StyleId);
+            IntelligentTextStyle style = IntelligentTextSettings.Instance.GetStyle(m_StyleId);
             if (style != null)
             {
                 var transform = GetComponent<RectTransform>();
@@ -139,7 +139,7 @@ namespace Common.Text
 
                 m_Parser.TextSettings.alignByGeometry = false;
                 m_Parser.TextSettings.fontStyle = FontStyle.Normal;
-                m_Parser.TextSettings.generateOutOfBounds = true;// m_GenerateOutOfBounds;
+                m_Parser.TextSettings.generateOutOfBounds = m_GenerateOutOfBounds;
                 m_Parser.TextSettings.generationExtents = new Vector2(transform.rect.width, transform.rect.height);
                 m_Parser.TextSettings.horizontalOverflow = m_HorizontalOverflow;
                 m_Parser.TextSettings.pivot = new Vector2(0.5f, 0.5f);
@@ -163,28 +163,18 @@ namespace Common.Text
 
         private void OnValidate()
         {
-            StartCoroutine(AwaitRefresh());
-        }
-
-        private IEnumerator AwaitRefresh()
-        {
-            while (IntelligentTextSettingsManager.Instance == null)
-            {
-                yield return null;
-            }
-            //force re-initialize
             m_RenderMode = RenderMode.Unknown;
             Refresh();
         }
-
+        
         private void OnEnable()
         {
-            IntelligentTextSettingsManager.RegisterText(this);
+            IntelligentTextSettings.Instance.RegisterText(this);
         }
         
         private void OnDisable()
         {
-            IntelligentTextSettingsManager.UnregisterText(this);
+            IntelligentTextSettings.Instance.UnregisterText(this);
         }
 
         private void OnDistroy()
