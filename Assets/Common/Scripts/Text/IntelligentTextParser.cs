@@ -32,7 +32,7 @@ namespace Common.Text
         
         private List<IntelligentTextDataNode> m_DataList;
         private TextGenerator m_TextGenerator;
-        private Vector2 m_SpacePlaceholderSize;
+        private Vector2 m_SpacePlaceholderSizePerUnit;
         private Mesh m_Mesh;
 
         private void ReplaceInsersts(XmlDocument i_Document)
@@ -71,39 +71,65 @@ namespace Common.Text
 
         }
 
+        private void AddDataNode()
+        {
+
+        }
+
+        public int BuildPlaceholderText(IntelligentTextTransform i_Transform, StringBuilder i_TextAccumulator)
+        {
+            Vector2 imageSize = i_Transform.scale * TextSettings.fontSize;
+            float imagePlaceholderWidth = SPACE_PLACEHOLDER_REPLACE_SIZE * m_SpacePlaceholderSizePerUnit.x;
+            int placementCount = (int)(imageSize.x / imagePlaceholderWidth + 0.5f);
+            if(placementCount <= 0)
+            {
+                placementCount = 1;
+            }
+            string imagePlaceholderForWidthStart = string.Format("<size={0}>", SPACE_PLACEHOLDER_REPLACE_SIZE);
+            i_TextAccumulator.Append(imagePlaceholderForWidthStart);
+            for (int i = 0; i < placementCount; ++i)
+            {
+                i_TextAccumulator.Append(SPACE_PLACEHOLDER_STR);
+            }
+            i_TextAccumulator.Append(SPACE_PLACEHOLDER_END);
+
+            return imagePlaceholderForWidthStart.Length + SPACE_PLACEHOLDER_END.Length + (SPACE_PLACEHOLDER_STR.Length * placementCount);
+        }
+
         public void BuildFinalText(StringBuilder i_TextAccumulator, XmlNode i_XmlContainer, IntelligentTextDataNode i_Parent, int i_CharCounter = 0)
         {
             foreach (XmlNode node in i_XmlContainer)
             {
+                int startIndex = i_CharCounter;
                 switch (node.NodeType)
                 {
                     case XmlNodeType.Text:
                         {
-                            int startIndex = i_CharCounter;
                             string decodedString = HttpUtility.HtmlDecode(node.InnerText);
                             i_TextAccumulator.Append(decodedString);
-                            int textLength = node.InnerText.Length;
+                            int textLength = decodedString.Length;
                             i_CharCounter += textLength;
                             int lastIndex = i_Parent.Children.Count - 1;
 
                             if (lastIndex >= 0 && i_Parent.Children[lastIndex].Type == IntelligentTextDataType.Text)
                             {
                                 i_Parent.Children[lastIndex].TextEndIndex += textLength;
-                                continue;
                             }
+                            else
+                            {
+                                IntelligentTextDataNode data = new IntelligentTextDataNode(
+                                        m_DataList.Count,
+                                        startIndex,
+                                        i_CharCounter,
+                                        null,
+                                        IntelligentTextDataType.Text
+                                    );
 
-                            IntelligentTextDataNode data = new IntelligentTextDataNode(
-                                    m_DataList.Count,
-                                    startIndex,
-                                    i_CharCounter,
-                                    null,
-                                    IntelligentTextDataType.Text
-                                );
-
-                            i_Parent.Children.Add(data);
-                            m_DataList.Add(data);
-                            break;
+                                i_Parent.Children.Add(data);
+                                m_DataList.Add(data);
+                            }
                         }
+                        break;
                     case XmlNodeType.Element:
                         if(node.Name == INSERT_DONE_TAG)
                         {
@@ -111,12 +137,12 @@ namespace Common.Text
                         }
                         else if (node.Name == GROUP_TAG)
                         {
-                            var attributeContainer = node.Attributes[INTERACTOR_ID_ATTRIBUTE];
-                            string interactorValue = attributeContainer != null ? attributeContainer.Value : null;
+                            var interactorContainer = node.Attributes[INTERACTOR_ID_ATTRIBUTE];
+                            string interactorValue = interactorContainer != null ? interactorContainer.Value : null;
                             IntelligentTextDataNode data = new IntelligentTextDataNode(
                                     m_DataList.Count,
-                                    i_CharCounter,
-                                    i_CharCounter,
+                                    startIndex,
+                                    startIndex,
                                     interactorValue,
                                     IntelligentTextDataType.Group
                                 );
@@ -135,63 +161,24 @@ namespace Common.Text
                                 IntelligentTextTransform transform = IntelligentTextSettings.Instance.GetTransform(transformContainer.Value);
                                 if (image != null && transform != null)
                                 {
-                                    int startIndex = i_CharCounter;
-                                    Vector2 imageSize = transform.scale * TextSettings.fontSize;
-                                    int imagePlaceholderHighScale = (int)(imageSize.y / m_SpacePlaceholderSize.y + 0.5f);
-                                    float imagePlaceholderLargeWidth = imagePlaceholderHighScale * m_SpacePlaceholderSize.x;
-                                    imageSize.x -= imagePlaceholderLargeWidth;
-
-                                    string imagePlaceholderForHeightStart = string.Format("<size={0}>", imagePlaceholderHighScale);
-                                    int largePlacementLength = imagePlaceholderForHeightStart.Length + SPACE_PLACEHOLDER_STR.Length + SPACE_PLACEHOLDER_END.Length;
-                                    i_TextAccumulator.Append(imagePlaceholderForHeightStart);
-                                    i_TextAccumulator.Append(SPACE_PLACEHOLDER_STR);
-                                    i_TextAccumulator.Append(SPACE_PLACEHOLDER_END);
-                                    i_CharCounter += largePlacementLength;
-
-                                    bool fitLargeEnding = imageSize.x >= imagePlaceholderLargeWidth;
-                                    if (fitLargeEnding)
-                                    {
-                                        imageSize.x -= imagePlaceholderLargeWidth;
-                                    }
-
-                                    float imagePlaceholderSmallWidth = SPACE_PLACEHOLDER_REPLACE_SIZE * m_SpacePlaceholderSize.x;
-                                    int smallPlacementCount = (int)(imageSize.x / imagePlaceholderSmallWidth + 0.5f);
-                                    if (smallPlacementCount > 0)
-                                    {
-                                        string imagePlaceholderForWidthStart = string.Format("<size={0}>", SPACE_PLACEHOLDER_REPLACE_SIZE);
-                                        i_TextAccumulator.Append(imagePlaceholderForWidthStart);
-                                        i_CharCounter += imagePlaceholderForWidthStart.Length + SPACE_PLACEHOLDER_END.Length + (SPACE_PLACEHOLDER_STR.Length + smallPlacementCount);
-
-                                        for (int i = 0; i < smallPlacementCount; ++i)
-                                        {
-                                            i_TextAccumulator.Append(SPACE_PLACEHOLDER_STR);
-                                        }
-                                        i_TextAccumulator.Append(SPACE_PLACEHOLDER_END);
-                                    }
-
-                                    if(fitLargeEnding)
-                                    {
-                                        i_TextAccumulator.Append(imagePlaceholderForHeightStart);
-                                        i_TextAccumulator.Append(SPACE_PLACEHOLDER_STR);
-                                        i_TextAccumulator.Append(SPACE_PLACEHOLDER_END);
-                                        i_CharCounter += largePlacementLength;
-                                    }
+                                    i_CharCounter += BuildPlaceholderText(transform, i_TextAccumulator);
 
                                     var interactorContainer = node.Attributes[INTERACTOR_ID_ATTRIBUTE];
                                     string interactorValue = interactorContainer != null ? interactorContainer.Value : null;
-                                    IntelligentTextDataNode data = new IntelligentTextDataNode(
+                                    IntelligentTextDataImageNode data = new IntelligentTextDataImageNode(
                                             m_DataList.Count,
                                             startIndex,
                                             i_CharCounter,
                                             interactorValue,
-                                            IntelligentTextDataType.Image
+                                            image,
+                                            transform
                                         );
                                     i_Parent.Children.Add(data);
                                     m_DataList.Add(data);
                                 }
                             }
                         }
-                        break;
+                    break;
                 }
             }
         }
@@ -228,8 +215,8 @@ namespace Common.Text
             //update the spacing placeholder width for selected font
             string spacePlaceholderTestStr = string.Format("{0}{1}{2}", SPACE_PLACEHOLDER_START, SPACE_PLACEHOLDER_STR, SPACE_PLACEHOLDER_END);
             m_TextGenerator.Populate(spacePlaceholderTestStr, tempTextSettings);
-            m_SpacePlaceholderSize.x = m_TextGenerator.rectExtents.width / SPACE_PLACEHOLDER_MEASURE_SIZE;
-            m_SpacePlaceholderSize.y = m_TextGenerator.rectExtents.height / SPACE_PLACEHOLDER_MEASURE_SIZE;
+            m_SpacePlaceholderSizePerUnit.x = m_TextGenerator.rectExtents.width / SPACE_PLACEHOLDER_MEASURE_SIZE;
+            m_SpacePlaceholderSizePerUnit.y = m_TextGenerator.rectExtents.height / SPACE_PLACEHOLDER_MEASURE_SIZE;
         }
 
         public void Parse(string i_Text)
@@ -246,12 +233,12 @@ namespace Common.Text
             ReplaceInsersts(document);
             StringBuilder textAccumulator = new StringBuilder();
             BuildFinalText(textAccumulator, xmlRoot, dataRoot);
-            UpdateMesh(textAccumulator.ToString());
+            GenerateMesh(textAccumulator.ToString());
 
             document.RemoveAll();
         }
 
-        public void UpdateMesh(string i_Text)
+        public void GenerateMesh(string i_Text)
         {
             if(m_Mesh != null)
             {
@@ -267,7 +254,72 @@ namespace Common.Text
             m_Mesh.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy | HideFlags.NotEditable;
 
             m_TextGenerator.Populate(i_Text, TextSettings);
-            m_TextGenerator.GetMesh(m_Mesh);
+
+            int vertSize = m_TextGenerator.vertexCount;
+            Vector3[] tempVerts = new Vector3[vertSize];
+            Color32[] tempColours = new Color32[vertSize];
+            Vector2[] tempUvs = new Vector2[vertSize];
+            IList<UIVertex> generatorVerts = m_TextGenerator.verts;
+            for (int i = 0; i < vertSize; ++i)
+            {
+                tempVerts[i] = generatorVerts[i].position;
+                tempColours[i] = generatorVerts[i].color;
+                tempUvs[i] = generatorVerts[i].uv0;
+            }
+            
+            m_Mesh.vertices = tempVerts;
+            m_Mesh.colors32 = tempColours;
+            m_Mesh.uv = tempUvs;
+
+            int dataNodeCount = m_DataList.Count;
+            for (int i = 0; i < dataNodeCount; ++i)
+            {
+                var dataNode = m_DataList[i];
+                switch (dataNode.Type)
+                {
+                    case IntelligentTextDataType.None: break;
+                    case IntelligentTextDataType.Group: break;
+                    case IntelligentTextDataType.Image:
+                        break;
+                    case IntelligentTextDataType.Text:
+                        break;
+                }
+            }
+
+            int characterCount = vertSize / 4;
+            int[] tempIndices = new int[characterCount * 6];
+            for (int i = 0; i < characterCount; ++i)
+            {
+                int vertIndexStart = i * 4;
+                int trianglesIndexStart = i * 6;
+                tempIndices[trianglesIndexStart++] = vertIndexStart;
+                tempIndices[trianglesIndexStart++] = vertIndexStart + 1;
+                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
+                tempIndices[trianglesIndexStart++] = vertIndexStart;
+                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
+                tempIndices[trianglesIndexStart] = vertIndexStart + 3;
+            }
+            o_Mesh.triangles = tempIndices;
+            //TODO: setBounds manually
+            o_Mesh.RecalculateBounds();
+        }
+
+        private int[] GenerateTriangles(IntelligentTextDataImageNode i_Data)
+        {
+            int characterCount = i_Data.TextEndIndex - i_Data.TextStartIndex;
+            int[] result = new int[characterCount * 6];
+            for (int i = 0; i < characterCount; ++i)
+            {
+                int vertIndexStart = (i_Data.TextStartIndex + i) * 4;
+                int trianglesIndexStart = (i_Data.TextStartIndex + i) * 6;
+                result[trianglesIndexStart++] = vertIndexStart;
+                result[trianglesIndexStart++] = vertIndexStart + 1;
+                result[trianglesIndexStart++] = vertIndexStart + 2;
+                result[trianglesIndexStart++] = vertIndexStart;
+                result[trianglesIndexStart++] = vertIndexStart + 2;
+                result[trianglesIndexStart] = vertIndexStart + 3;
+            }
+            return result;
         }
 
         public void Dispose()
