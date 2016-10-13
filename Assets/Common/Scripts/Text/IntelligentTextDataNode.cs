@@ -58,11 +58,12 @@ namespace Common.Text
             {
                 var textNode = (IntelligentTextDataTextNode)i_Node;
                 Text += textNode.Text;
-                Bounds.Encapsulate(textNode.Bounds);
                 return true;
             }
             return false;
         }
+
+        public 
     }
 
     public class IntelligentTextDataImageNode : IntelligentTextDataNode
@@ -148,7 +149,6 @@ namespace Common.Text
             {
                 var groupNode = (IntelligentTextDataGroupNode)i_Node;
                 Children.AddRange(groupNode.Children);
-                Bounds.Encapsulate(groupNode.Bounds);
                 return true;
             }
             return false;

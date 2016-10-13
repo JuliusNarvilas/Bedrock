@@ -21,14 +21,15 @@ namespace Common.Text
     [Serializable]
     public class IntelligentTextLocalizationData
     {
-        public List<IntelligentTextInsertRecord> inserts;
+        public List<IntelligentTextKeyValueRecord> inserts;
+        public List<IntelligentTextKeyValueRecord> localizations;
         public List<IntelligentTextStyleRecord> styles;
         public List<IntelligentTextImageRecord> images;
         public List<IntelligentTextTransform> transforms;
     }
 
     [Serializable]
-    public struct IntelligentTextInsertRecord
+    public struct IntelligentTextKeyValueRecord
     {
         public string id;
         public string data;

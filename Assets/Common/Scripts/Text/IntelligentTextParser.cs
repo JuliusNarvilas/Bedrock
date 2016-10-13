@@ -105,7 +105,12 @@ namespace Common.Text
                 {
                     case XmlNodeType.Text:
                         {
-                            string decodedString = HttpUtility.HtmlDecode(node.InnerText);
+                            string decodedString =
+#if INTELLIGENT_TEXT_DECODE_HTML
+                            HttpUtility.HtmlDecode(node.InnerText);
+#else
+                            node.InnerText;
+#endif
                             i_TextAccumulator.Append(decodedString);
                             int textLength = decodedString.Length;
                             i_CharCounter += textLength;

@@ -1,11 +1,61 @@
 ﻿using Common.IO;
 using System.Collections.Generic;
 using UnityEngine;
+using Common.Collections;
+using System;
+using System.Text;
 
 namespace Common.Text
 {
     public class IntelligentTextLocalization
     {
+        private class LocalizationPlaceholders
+        {
+            public List<IntelligentTextKeyValueRecord> Values;
+            public const char PLACEHOLDER_OPENING = '{';
+            public const char PLACEHOLDER_CLOSING = '}';
+
+            public string Localize(string i_Text)
+            {
+                bool matching = false;
+                int size = i_Text.Length;
+                StringBuilder result = new StringBuilder(size);
+                for (int i = 0; i < size; ++i)
+                {
+                    char letter = i_Text[i];
+
+                    if (!matching)
+                    {
+                        if (letter == PLACEHOLDER_OPENING)
+                        {
+                            matching = true;
+                        }
+                        else
+                        {
+                            result.Append(letter);
+                        }
+                    }
+                    else
+                    {
+                        if (letter == PLACEHOLDER_CLOSING)
+                        {
+                            i_Text.IndexOf(placeholder, indexer, placeholder.length);
+                        }
+                    }
+                }
+            }
+
+            public void Add(IntelligentTextKeyValueRecord i_Record)
+            {
+                Values.Add(i_Record);
+            }
+
+            public void Add(IList<IntelligentTextKeyValueRecord> i_Records)
+            {
+                Values.AddRange(i_Records);
+            }
+        }
+
         public Dictionary<string, string> Inserts;
         public Dictionary<string, IntelligentTextStyle> Styles;
         public Dictionary<string, Sprite> Images;
@@ -27,7 +77,7 @@ namespace Common.Text
         public void Append(IntelligentTextLocalizationData i_Data)
         {
             int insertsCount = i_Data.inserts.Count;
-            IntelligentTextInsertRecord insertRecord;
+            IntelligentTextKeyValueRecord insertRecord;
             for (int i = 0; i < insertsCount; ++i)
             {
                 insertRecord = i_Data.inserts[i];
