@@ -80,12 +80,6 @@ namespace Common.Text
 
         public void SetCustomInsert(string i_Id, CustomInsertProvider i_Response)
         {
-#if UNITY_EDITOR
-            if(m_CustomInserts.ContainsKey(i_Id))
-            {
-                Debug.LogWarningFormat("IntelligentText SetCustomInsert overwrites existing entry with id: {0}", i_Id);
-            }
-#endif
             m_CustomInserts[i_Id] = i_Response;
         }
         public bool RemoveCustomInsert(string i_Id)
@@ -116,7 +110,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Debug.LogErrorFormat("IntelligentText Insert not found with id: {0}", i_Id);
+            Logger.DebugLogError("IntelligentText Insert not found with id: {0}", i_Id);
             return string.Format("[{0}]", i_Id);
         }
 
@@ -127,7 +121,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Debug.LogErrorFormat("IntelligentText Style not found with id: {0}", i_Id);
+            Logger.DebugLogError("IntelligentText Style not found with id: {0}", i_Id);
             return null;
         }
 
@@ -138,7 +132,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Debug.LogErrorFormat("IntelligentText Image not found with id: {0}", i_Id);
+            Logger.DebugLogError("IntelligentText Image not found with id: {0}", i_Id);
             return null;
         }
 
@@ -149,7 +143,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Debug.LogErrorFormat("IntelligentText Transform not found with id: {0}", i_Id);
+            Logger.DebugLogError("IntelligentText Transform not found with id: {0}", i_Id);
             return null;
         }
 
@@ -214,7 +208,7 @@ namespace Common.Text
             {
                 m_LocalizationsRecords[localizationRecord.id] = localizationRecord;
             }
-            Debug.Assert(m_LocalizationsRecords.Count > 0, "No LocalizationsRecords");
+            Logger.DebugLogWarningIf(m_LocalizationsRecords.Count > 0, "No LocalizationsRecords");
 
             string savedLocalization = PlayerPrefs.GetString(LOCALIZATION_SAVE_ID, string.Empty);
             if(string.IsNullOrEmpty(savedLocalization))

@@ -1,107 +1,64 @@
 ﻿using Common.IO;
 using System.Collections.Generic;
 using UnityEngine;
-using Common.Collections;
-using System;
 using System.Text;
 
 namespace Common.Text
 {
     public class IntelligentTextLocalization
     {
-        private class LocalizationPlaceholders
-        {
-            public List<IntelligentTextKeyValueRecord> Values;
-            public const char PLACEHOLDER_OPENING = '{';
-            public const char PLACEHOLDER_CLOSING = '}';
+        public const char PLACEHOLDER_OPENING = '{';
+        public const char PLACEHOLDER_CLOSING = '}';
 
-            public string Localize(string i_Text)
-            {
-                bool matching = false;
-                int size = i_Text.Length;
-                StringBuilder result = new StringBuilder(size);
-                for (int i = 0; i < size; ++i)
-                {
-                    char letter = i_Text[i];
-
-                    if (!matching)
-                    {
-                        if (letter == PLACEHOLDER_OPENING)
-                        {
-                            matching = true;
-                        }
-                        else
-                        {
-                            result.Append(letter);
-                        }
-                    }
-                    else
-                    {
-                        if (letter == PLACEHOLDER_CLOSING)
-                        {
-                            i_Text.IndexOf(placeholder, indexer, placeholder.length);
-                        }
-                    }
-                }
-            }
-
-            public void Add(IntelligentTextKeyValueRecord i_Record)
-            {
-                Values.Add(i_Record);
-            }
-
-            public void Add(IList<IntelligentTextKeyValueRecord> i_Records)
-            {
-                Values.AddRange(i_Records);
-            }
-        }
-
-        public Dictionary<string, string> Inserts;
-        public Dictionary<string, IntelligentTextStyle> Styles;
+        private int m_LocalizationTextMaxCapacity;
+        public Dictionary<string, string> Localizations;
         public Dictionary<string, Sprite> Images;
         public Dictionary<string, IntelligentTextTransform> Transforms;
-        public List<ResourcesDBItem> ImageResources;
+        public Dictionary<string, string> Inserts;
+        public Dictionary<string, IntelligentTextStyle> Styles;
+        public List<ResourcesDBItem> TrackedResources;
 
         public static IntelligentTextLocalization Create()
         {
             return new IntelligentTextLocalization()
             {
-                Inserts = new Dictionary<string, string>(),
-                Styles = new Dictionary<string, IntelligentTextStyle>(),
+                m_LocalizationTextMaxCapacity = 0,
+                Localizations = new Dictionary<string, string>(),
                 Images = new Dictionary<string, Sprite>(),
                 Transforms = new Dictionary<string, IntelligentTextTransform>(),
-                ImageResources = new List<ResourcesDBItem>()
+                Inserts = new Dictionary<string, string>(),
+                Styles = new Dictionary<string, IntelligentTextStyle>(),
+                TrackedResources = new List<ResourcesDBItem>()
             };
         }
 
         public void Append(IntelligentTextLocalizationData i_Data)
         {
+            int localizationCount = i_Data.localizations.Count;
+            IntelligentTextKeyValueRecord localizationRecord;
+            for (int i = 0; i < localizationCount; ++i)
+            {
+                localizationRecord = i_Data.localizations[i];
+                Localizations[localizationRecord.id] = localizationRecord.data;
+                if(m_LocalizationTextMaxCapacity < localizationRecord.data.Length)
+                {
+                    m_LocalizationTextMaxCapacity = localizationRecord.data.Length;
+                }
+            }
+            
             int insertsCount = i_Data.inserts.Count;
             IntelligentTextKeyValueRecord insertRecord;
             for (int i = 0; i < insertsCount; ++i)
             {
                 insertRecord = i_Data.inserts[i];
-#if UNITY_EDITOR
-                if (Inserts.ContainsKey(insertRecord.id))
-                {
-                    Debug.LogWarningFormat("IntelligentText Localization overwrites existing insert entry with id: {0}", insertRecord.id);
-                }
-#endif
                 Inserts[insertRecord.id] = insertRecord.data;
             }
-
-
+            
             int stylesCount = i_Data.styles.Count;
             IntelligentTextStyleRecord styleRecord;
             for (int i = 0; i < stylesCount; ++i)
             {
                 styleRecord = i_Data.styles[i];
-#if UNITY_EDITOR
-                if (Styles.ContainsKey(styleRecord.id))
-                {
-                    Debug.LogWarningFormat("IntelligentText Localization overwrites existing style entry with id: {0}", styleRecord.id);
-                }
-#endif
                 var resource = ResourcesDB.GetByPath(styleRecord.fontPath);
                 if (resource != null)
                 {
@@ -115,14 +72,18 @@ namespace Common.Text
                             FontSize = styleRecord.fontSize,
                             LineSpacing = styleRecord.lineSpacing
                         };
+                        TrackedResources.Add(resource);
+                    }
+                    else
+                    {
+                        resource.Unload();
                     }
                 }
-#if UNITY_EDITOR
-                if (!Styles.ContainsKey(styleRecord.id))
-                {
-                    Debug.LogErrorFormat("IntelligentText font not found ({0}) for style id: {1}", styleRecord.fontPath, styleRecord.id);
-                }
-#endif
+                Logger.DebugLogErrorIf(
+                    !Styles.ContainsKey(styleRecord.id),
+                    "IntelligentText font not found ({0}) for style id: {1}",
+                    styleRecord.fontPath, styleRecord.id
+                    );
             }
 
             int imagesCount = i_Data.images.Count;
@@ -130,12 +91,6 @@ namespace Common.Text
             for (int i = 0; i < imagesCount; ++i)
             {
                 imageRecord = i_Data.images[i];
-#if UNITY_EDITOR
-                if (Images.ContainsKey(imageRecord.id))
-                {
-                    Debug.LogWarningFormat("IntelligentText Localization overwrites existing image entry with id: {0}", imageRecord.id);
-                }
-#endif
                 var resource = ResourcesDB.GetByPath(imageRecord.path);
                 if (resource != null)
                 {
@@ -143,19 +98,18 @@ namespace Common.Text
                     if (spriteAsset != null)
                     {
                         Images[imageRecord.id] = spriteAsset;
-                        ImageResources.Add(resource);
+                        TrackedResources.Add(resource);
                     }
                     else
                     {
                         resource.Unload();
                     }
                 }
-#if UNITY_EDITOR
-                if (!Images.ContainsKey(imageRecord.id))
-                {
-                    Debug.LogErrorFormat("IntelligentText Localization image not found ({0}) for id: {1}", imageRecord.path, imageRecord.id);
-                }
-#endif
+                Logger.DebugLogErrorIf(
+                    !Images.ContainsKey(imageRecord.id),
+                    "IntelligentText Localization image not found ({0}) for id: {1}",
+                    imageRecord.path, imageRecord.id
+                    );
             }
 
             int transformsCount = i_Data.transforms.Count;
@@ -163,43 +117,75 @@ namespace Common.Text
             for (int i = 0; i < transformsCount; ++i)
             {
                 transformRecord = i_Data.transforms[i];
-#if UNITY_EDITOR
-                if (Transforms.ContainsKey(transformRecord.id))
-                {
-                    Debug.LogWarningFormat("IntelligentText Localization overwrites existing transform entry with id: {0}", transformRecord.id);
-                }
-#endif
                 Transforms[transformRecord.id] = transformRecord;
             }
         }
 
+        public string Localize(string i_Text)
+        {
+            StringBuilder result = new StringBuilder(m_LocalizationTextMaxCapacity);
+            int textSize = i_Text.Length;
+            int lastTextIndex = textSize - 1;
+            for (int i = 0; i < textSize; ++i)
+            {
+                char letter = i_Text[i];
+                if (letter == PLACEHOLDER_OPENING)
+                {
+                    //if placeholder is possible, test for it
+                    if (i < lastTextIndex && i_Text[i + 1] != PLACEHOLDER_OPENING)
+                    {
+                        int endIndex = i_Text.IndexOf(PLACEHOLDER_CLOSING, i);
+                        if (endIndex >= 0)
+                        {
+                            string key = i_Text.Substring(i + 1, endIndex - i - 2);
+                            string replacement;
+                            if (Localizations.TryGetValue(key, out replacement))
+                            {
+                                result.Append(replacement);
+                            }
+                            else
+                            {
+                                //print the whole placeholder text as was if no localization was found
+                                result.Append(i_Text, i, endIndex - i + 1);
+                            }
+                            i = endIndex;
+                        }
+                        else
+                        {
+                            //end localization if no placeholders are possible
+                            result.Append(i_Text, i, textSize - i);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        //2 placeholder openings are replaced with a single placeholder opening char
+                        ++i;
+                        result.Append(PLACEHOLDER_OPENING);
+                    }
+                }
+                else
+                {
+                    result.Append(letter);
+                }
+            }
+            return result.ToString();
+        }
+
         public void Clear()
         {
-            if (Inserts != null)
+            Localizations.Clear();
+            Images.Clear();
+            Transforms.Clear();
+            Inserts.Clear();
+            Styles.Clear();
+
+            int resourceCount = TrackedResources.Count;
+            for (int i = 0; i < resourceCount; ++i)
             {
-                Inserts.Clear();
+                TrackedResources[i].Unload();
             }
-            if (Styles != null)
-            {
-                Styles.Clear();
-            }
-            if (Images != null)
-            {
-                Images.Clear();
-            }
-            if (Transforms != null)
-            {
-                Transforms.Clear();
-            }
-            if (ImageResources != null)
-            {
-                int resourceCount = ImageResources.Count;
-                for (int i = 0; i < resourceCount; ++i)
-                {
-                    ImageResources[i].Unload();
-                }
-                ImageResources.Clear();
-            }
+            TrackedResources.Clear();
         }
     }
 }

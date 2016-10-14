@@ -21,8 +21,8 @@ namespace Common.Text
     [Serializable]
     public class IntelligentTextLocalizationData
     {
-        public List<IntelligentTextKeyValueRecord> inserts;
         public List<IntelligentTextKeyValueRecord> localizations;
+        public List<IntelligentTextKeyValueRecord> inserts;
         public List<IntelligentTextStyleRecord> styles;
         public List<IntelligentTextImageRecord> images;
         public List<IntelligentTextTransform> transforms;
