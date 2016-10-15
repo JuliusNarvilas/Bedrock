@@ -34,11 +34,11 @@ namespace Common.Text
 
         public void Append(IntelligentTextLocalizationData i_Data)
         {
-            int localizationCount = i_Data.localizations.Count;
+            int localizationCount = i_Data.textLocalizations.Count;
             IntelligentTextKeyValueRecord localizationRecord;
             for (int i = 0; i < localizationCount; ++i)
             {
-                localizationRecord = i_Data.localizations[i];
+                localizationRecord = i_Data.textLocalizations[i];
                 Localizations[localizationRecord.id] = localizationRecord.data;
                 if(m_LocalizationTextMaxCapacity < localizationRecord.data.Length)
                 {

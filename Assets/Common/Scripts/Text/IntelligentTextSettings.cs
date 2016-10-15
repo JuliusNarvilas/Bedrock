@@ -147,6 +147,11 @@ namespace Common.Text
             return null;
         }
 
+        public string Localize(string i_Text)
+        {
+            return m_CurrentLocalization.Localize(i_Text);
+        }
+
         public void RefreshText()
         {
             //regenerate text

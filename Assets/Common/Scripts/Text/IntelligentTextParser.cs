@@ -1,5 +1,4 @@
-﻿using RestSharp.Contrib;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +9,8 @@ namespace Common.Text
 {
     public struct IntelligentTextParser : IDisposable
     {
+        private static readonly string ROOT_TAG = "root";
+
         public static readonly string INSERT_TAG = "insert";
         public static readonly string INSERT_DONE_TAG = "_insert";
         public static readonly string GROUP_TAG = "group";
@@ -19,21 +20,26 @@ namespace Common.Text
         public static readonly string ID_ATTRIBUTE = "id";
         public static readonly string TRANSFORM_ID_ATTRIBUTE = "transformId";
 
-        private static readonly string ROOT_TAG = "root";
         private const float SPACE_PLACEHOLDER_REPLACE_SIZE = 10;
         private const float SPACE_PLACEHOLDER_MEASURE_SIZE = 100;
-        private static readonly string SPACE_PLACEHOLDER_START = string.Format("<size={0}>", (int)SPACE_PLACEHOLDER_MEASURE_SIZE);
+        public static readonly string SPACE_PLACEHOLDER_START = string.Format("<size={0}>", (int)SPACE_PLACEHOLDER_REPLACE_SIZE);
         private static readonly string SPACE_PLACEHOLDER_END = "</size>";
-        private static readonly string SPACE_PLACEHOLDER_STR = "|";
-
-        public TextGenerationSettings TextSettings;
-        public IntelligentTextDataNode DataRoot { get { return m_DataList[0]; } }
-        public Mesh Mesh { get { return m_Mesh; } }
+        public static readonly string SPACE_PLACEHOLDER_STR = "|";
+        private static readonly string SPACE_PLACEHOLDER_MEASURE = string.Format("<size={0}>{1}</size>", (int)SPACE_PLACEHOLDER_MEASURE_SIZE, SPACE_PLACEHOLDER_STR);
         
         private List<IntelligentTextDataNode> m_DataList;
         private TextGenerator m_TextGenerator;
         private Vector2 m_SpacePlaceholderSizePerUnit;
+        private Vector2 m_SpacePlaceholderSize;
         private Mesh m_Mesh;
+
+        public TextGenerationSettings TextSettings;
+
+        public Vector2 SpacePlaceholderSizePerUnit { get { return m_SpacePlaceholderSizePerUnit; } }
+        public Vector2 SpacePlaceholderEstimatedSize { get { return m_SpacePlaceholderSizePerUnit * TextSettings.fontSize; } }
+        public Vector2 SpacePlaceholderSize { get { return m_SpacePlaceholderSize; } }
+        public IntelligentTextDataNode DataRoot { get { return m_DataList[0]; } }
+        public Mesh Mesh { get { return m_Mesh; } }
 
         private void ReplaceInsersts(XmlDocument i_Document)
         {
@@ -76,60 +82,25 @@ namespace Common.Text
 
         }
 
-        public int BuildPlaceholderText(IntelligentTextTransform i_Transform, StringBuilder i_TextAccumulator)
-        {
-            Vector2 imageSize = i_Transform.scale * TextSettings.fontSize;
-            float imagePlaceholderWidth = SPACE_PLACEHOLDER_REPLACE_SIZE * m_SpacePlaceholderSizePerUnit.x;
-            int placementCount = (int)(imageSize.x / imagePlaceholderWidth + 0.5f);
-            if(placementCount <= 0)
-            {
-                placementCount = 1;
-            }
-            string imagePlaceholderForWidthStart = string.Format("<size={0}>", SPACE_PLACEHOLDER_REPLACE_SIZE);
-            i_TextAccumulator.Append(imagePlaceholderForWidthStart);
-            for (int i = 0; i < placementCount; ++i)
-            {
-                i_TextAccumulator.Append(SPACE_PLACEHOLDER_STR);
-            }
-            i_TextAccumulator.Append(SPACE_PLACEHOLDER_END);
-
-            return imagePlaceholderForWidthStart.Length + SPACE_PLACEHOLDER_END.Length + (SPACE_PLACEHOLDER_STR.Length * placementCount);
-        }
-
-        public void BuildFinalText(StringBuilder i_TextAccumulator, XmlNode i_XmlContainer, IntelligentTextDataNode i_Parent, int i_CharCounter = 0)
+        public void BuildTextData(XmlNode i_XmlContainer, IntelligentTextDataNode i_Parent)
         {
             foreach (XmlNode node in i_XmlContainer)
             {
-                int startIndex = i_CharCounter;
                 switch (node.NodeType)
                 {
                     case XmlNodeType.Text:
                         {
-                            string decodedString =
-#if INTELLIGENT_TEXT_DECODE_HTML
-                            HttpUtility.HtmlDecode(node.InnerText);
-#else
-                            node.InnerText;
-#endif
-                            i_TextAccumulator.Append(decodedString);
-                            int textLength = decodedString.Length;
-                            i_CharCounter += textLength;
-                            int lastIndex = i_Parent.Children.Count - 1;
+                            IntelligentTextDataNode data = new IntelligentTextDataTextNode(
+                                m_DataList.Count,
+                                null,
+                                node.InnerText
+                            );
 
-                            if (lastIndex >= 0 && i_Parent.Children[lastIndex].Type == IntelligentTextDataType.Text)
+                            int lastSiblingIndex = i_Parent.Children.Count - 1;
+                            //attempt to merge sibling nodes
+                            if (lastSiblingIndex < 0 || !i_Parent.Children[lastSiblingIndex].Merge(data))
                             {
-                                i_Parent.Children[lastIndex].TextEndIndex += textLength;
-                            }
-                            else
-                            {
-                                IntelligentTextDataNode data = new IntelligentTextDataNode(
-                                        m_DataList.Count,
-                                        startIndex,
-                                        i_CharCounter,
-                                        null,
-                                        IntelligentTextDataType.Text
-                                    );
-
+                                //track a new node if merging failed
                                 i_Parent.Children.Add(data);
                                 m_DataList.Add(data);
                             }
@@ -138,23 +109,19 @@ namespace Common.Text
                     case XmlNodeType.Element:
                         if(node.Name == INSERT_DONE_TAG)
                         {
-                            BuildFinalText(i_TextAccumulator, node, i_Parent, i_CharCounter);
+                            BuildTextData(node, i_Parent);
                         }
                         else if (node.Name == GROUP_TAG)
                         {
                             var interactorContainer = node.Attributes[INTERACTOR_ID_ATTRIBUTE];
                             string interactorValue = interactorContainer != null ? interactorContainer.Value : null;
-                            IntelligentTextDataNode data = new IntelligentTextDataNode(
+                            IntelligentTextDataNode data = new IntelligentTextDataGroupNode(
                                     m_DataList.Count,
-                                    startIndex,
-                                    startIndex,
-                                    interactorValue,
-                                    IntelligentTextDataType.Group
+                                    interactorValue
                                 );
                             i_Parent.Children.Add(data);
                             m_DataList.Add(data);
-                            BuildFinalText(i_TextAccumulator, node, data, i_CharCounter);
-                            data.TextEndIndex = m_DataList.Last().TextEndIndex;
+                            BuildTextData(node, data);
                         }
                         else if (node.Name == IMAGE_TAG)
                         {
@@ -166,18 +133,15 @@ namespace Common.Text
                                 IntelligentTextTransform transform = IntelligentTextSettings.Instance.GetTransform(transformContainer.Value);
                                 if (image != null && transform != null)
                                 {
-                                    i_CharCounter += BuildPlaceholderText(transform, i_TextAccumulator);
-
                                     var interactorContainer = node.Attributes[INTERACTOR_ID_ATTRIBUTE];
                                     string interactorValue = interactorContainer != null ? interactorContainer.Value : null;
                                     IntelligentTextDataImageNode data = new IntelligentTextDataImageNode(
                                             m_DataList.Count,
-                                            startIndex,
-                                            i_CharCounter,
                                             interactorValue,
                                             image,
                                             transform
                                         );
+                                    
                                     i_Parent.Children.Add(data);
                                     m_DataList.Add(data);
                                 }
@@ -195,12 +159,12 @@ namespace Common.Text
                 m_DataList = new List<IntelligentTextDataNode>();
                 m_TextGenerator = new TextGenerator();
             }
-            m_DataList.Clear();
+
             TextGenerationSettings tempTextSettings = new TextGenerationSettings()
             {
                 color = Color.black,
                 font = TextSettings.font,
-                fontSize = 10,
+                fontSize = TextSettings.fontSize,
                 lineSpacing = 1,
                 alignByGeometry = false,
                 fontStyle = FontStyle.Normal,
@@ -218,17 +182,29 @@ namespace Common.Text
                 verticalOverflow = VerticalWrapMode.Overflow
             };
             //update the spacing placeholder width for selected font
-            string spacePlaceholderTestStr = string.Format("{0}{1}{2}", SPACE_PLACEHOLDER_START, SPACE_PLACEHOLDER_STR, SPACE_PLACEHOLDER_END);
-            m_TextGenerator.Populate(spacePlaceholderTestStr, tempTextSettings);
-            m_SpacePlaceholderSizePerUnit.x = m_TextGenerator.rectExtents.width / SPACE_PLACEHOLDER_MEASURE_SIZE;
-            m_SpacePlaceholderSizePerUnit.y = m_TextGenerator.rectExtents.height / SPACE_PLACEHOLDER_MEASURE_SIZE;
+            m_TextGenerator.Populate(SPACE_PLACEHOLDER_MEASURE, tempTextSettings);
+            m_SpacePlaceholderSizePerUnit = m_TextGenerator.rectExtents.size * (SPACE_PLACEHOLDER_REPLACE_SIZE / SPACE_PLACEHOLDER_MEASURE_SIZE);
+        }
+
+        public void UpdateText()
+        {
+            StringBuilder textAccumulator = new StringBuilder();
+            int size = m_DataList.Count;
+            for (int i = 0; i < size; ++i)
+            {
+                m_DataList[i].BuildText(textAccumulator, ref this);
+            }
+
+            //TODO:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            GenerateMesh(textAccumulator.ToString());
         }
 
         public void Parse(string i_Text)
         {
+            m_DataList.Clear();
             Setup();
             var document = new XmlDocument();
-            var dataRoot = new IntelligentTextDataNode(0, -1, -1, null);
+            var dataRoot = new IntelligentTextDataNode(0);
             m_DataList.Add(dataRoot);
 
             XmlElement xmlRoot = document.CreateElement(ROOT_TAG);
@@ -236,11 +212,8 @@ namespace Common.Text
             xmlRoot.InnerXml = i_Text;
 
             ReplaceInsersts(document);
-            StringBuilder textAccumulator = new StringBuilder();
-            BuildFinalText(textAccumulator, xmlRoot, dataRoot);
-            GenerateMesh(textAccumulator.ToString());
-
-            document.RemoveAll();
+            BuildTextData(xmlRoot, dataRoot);
+            UpdateText();
         }
 
         public void GenerateMesh(string i_Text)

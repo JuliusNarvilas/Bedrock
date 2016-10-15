@@ -1,6 +1,14 @@
-﻿using System.Collections.Generic;
+﻿//Allowes to use text that is escaped as HTML text
+//#define INTELLIGENT_TEXT_DECODE_HTML
+
+using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+
+#if INTELLIGENT_TEXT_DECODE_HTML
+using RestSharp.Contrib;
+#endif
 
 namespace Common.Text
 {
@@ -12,20 +20,31 @@ namespace Common.Text
         Text
     }
 
+    /// <summary>
+    /// An interface to adjust final generated IntelligentText mesh.
+    /// </summary>
+    public interface IIntelligentTextMeshModifier
+    {
+        void ChangeMesh();
+    }
+
     public class IntelligentTextDataNode
     {
-        public Bounds Bounds;
+        public readonly List<Bounds> Bounds;
         public readonly int Id;
         public readonly IntelligentTextDataType Type;
         public readonly string InteractorId;
         public readonly List<IntelligentTextDataNode> Children;
+        public readonly List<IIntelligentTextMeshModifier> MeshModifier;
 
         public IntelligentTextDataNode(int i_Id)
         {
+            Bounds = new List<Bounds>();
             Id = i_Id;
             Type = IntelligentTextDataType.None;
             InteractorId = null;
             Children = new List<IntelligentTextDataNode>();
+            MeshModifier = new List<IIntelligentTextMeshModifier>();
         }
 
         protected IntelligentTextDataNode(int i_Id, string i_InteractorId, IntelligentTextDataType i_Type, List<IntelligentTextDataNode> i_Children)
@@ -40,6 +59,18 @@ namespace Common.Text
         {
             return false;
         }
+
+        public virtual void BuildText(StringBuilder i_TextAccumulator, ref IntelligentTextParser i_Parser)
+        { }
+
+        public void ApplyMeshModifiers()
+        {
+            int size = MeshModifier.Count;
+            for (int i = 0; i < size; ++i)
+            {
+                MeshModifier[i].ChangeMesh();
+            }
+        }
     }
 
     public class IntelligentTextDataTextNode : IntelligentTextDataNode
@@ -49,7 +80,11 @@ namespace Common.Text
         public IntelligentTextDataTextNode(int i_Id, string i_InteractorId, string i_Text) :
             base(i_Id, i_InteractorId, IntelligentTextDataType.Text, null)
         {
+#if INTELLIGENT_TEXT_DECODE_HTML
+            Text = HttpUtility.HtmlDecode(i_Text);
+#else
             Text = i_Text;
+#endif
         }
 
         public override bool Merge(IntelligentTextDataNode i_Node)
@@ -63,20 +98,16 @@ namespace Common.Text
             return false;
         }
 
-        public 
+        public override void BuildText(StringBuilder i_TextAccumulator, ref IntelligentTextParser i_Parser)
+        {
+            i_TextAccumulator.Append(IntelligentTextSettings.Instance.Localize(Text));
+        }
     }
 
-    public class IntelligentTextDataImageNode : IntelligentTextDataNode
+    public class IntelligentTextDataImageNode : IntelligentTextDataNode, IIntelligentTextMeshModifier
     {
-        private const float SPACE_PLACEHOLDER_REPLACE_SIZE = 10;
-        private const float SPACE_PLACEHOLDER_MEASURE_SIZE = 100;
-        private static readonly string SPACE_PLACEHOLDER_START = string.Format("<size={0}>", (int)SPACE_PLACEHOLDER_REPLACE_SIZE);
-        private static readonly string SPACE_PLACEHOLDER_END = "</size>";
-        private static readonly string SPACE_PLACEHOLDER_STR = "|";
-        private static readonly string SPACE_PLACEHOLDER_MEASURE = string.Format("<size={0}>{1}</size>", (int)SPACE_PLACEHOLDER_MEASURE_SIZE, SPACE_PLACEHOLDER_STR);
-
-        private Vector2 m_SpacePlaceholderSize;
-        private string m_PlaceholderText;
+        private int m_IndexInFinalText;
+        private int m_PlaceholderLength;
 
         public Sprite Image;
         public IntelligentTextTransform Transform;
@@ -86,54 +117,29 @@ namespace Common.Text
         {
             Image = i_Image;
             Transform = i_Transform;
+            MeshModifier.Add(this);
         }
 
-        private void SetupSpacePlaceholder(TextGenerator i_TextGenerator, ref TextGenerationSettings i_TextSettings)
+        public override void BuildText(StringBuilder i_TextAccumulator, ref IntelligentTextParser i_Parser)
         {
-            TextGenerationSettings tempTextSettings = new TextGenerationSettings()
+            Vector2 imageSize = Transform.scale * i_Parser.TextSettings.fontSize;
+            float estimatedPlaceholderWidth = i_Parser.TextSettings.fontSize * i_Parser.SpacePlaceholderSizePerUnit.x;
+            m_PlaceholderLength = (int)(imageSize.x / estimatedPlaceholderWidth + 0.5f);
+            if (m_PlaceholderLength <= 0)
             {
-                color = Color.black,
-                font = i_TextSettings.font,
-                fontSize = 10,
-                lineSpacing = 1,
-                alignByGeometry = false,
-                fontStyle = FontStyle.Normal,
-                generateOutOfBounds = true,
-                generationExtents = new Vector2(100, 100),
-                horizontalOverflow = HorizontalWrapMode.Overflow,
-                pivot = new Vector2(0.5f, 0.5f),
-                resizeTextForBestFit = false,
-                resizeTextMaxSize = 600,
-                resizeTextMinSize = 6,
-                richText = true,
-                scaleFactor = 1,
-                textAnchor = TextAnchor.MiddleCenter,
-                updateBounds = true,
-                verticalOverflow = VerticalWrapMode.Overflow
-            };
-            //update the spacing placeholder width for selected font
-            i_TextGenerator.Populate(SPACE_PLACEHOLDER_MEASURE, tempTextSettings);
-            m_SpacePlaceholderSize = i_TextGenerator.rectExtents.size * (SPACE_PLACEHOLDER_REPLACE_SIZE / SPACE_PLACEHOLDER_MEASURE_SIZE);
+                m_PlaceholderLength = 1;
+            }
+
+            m_IndexInFinalText = i_TextAccumulator.Length;
+            for (int i = 0; i < m_PlaceholderLength; ++i)
+            {
+                i_TextAccumulator.Append(IntelligentTextParser.SPACE_PLACEHOLDER_STR);
+            }
         }
 
-        public void BuildPlaceholderText(IntelligentTextTransform i_Transform, ref TextGenerationSettings i_TextSettings)
+        public void ChangeMesh()
         {
-            Vector2 imageSize = i_Transform.scale * i_TextSettings.fontSize;
-            int placementCount = (int)(imageSize.x / m_SpacePlaceholderSize.x + 0.5f);
-            if (placementCount <= 0)
-            {
-                placementCount = 1;
-            }
-
-            StringBuilder textAccumulator = new StringBuilder();
-            textAccumulator.Append(SPACE_PLACEHOLDER_START);
-            for (int i = 0; i < placementCount; ++i)
-            {
-                textAccumulator.Append(SPACE_PLACEHOLDER_STR);
-            }
-            textAccumulator.Append(SPACE_PLACEHOLDER_END);
-
-            m_PlaceholderText = textAccumulator.ToString();
+            throw new NotImplementedException();
         }
     }
 
