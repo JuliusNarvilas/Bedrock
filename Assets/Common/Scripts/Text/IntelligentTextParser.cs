@@ -19,13 +19,9 @@ namespace Common.Text
         public static readonly string INTERACTOR_ID_ATTRIBUTE = "interactorId";
         public static readonly string ID_ATTRIBUTE = "id";
         public static readonly string TRANSFORM_ID_ATTRIBUTE = "transformId";
-
-        private const float SPACE_PLACEHOLDER_REPLACE_SIZE = 10;
+        
         private const float SPACE_PLACEHOLDER_MEASURE_SIZE = 100;
-        public static readonly string SPACE_PLACEHOLDER_START = string.Format("<size={0}>", (int)SPACE_PLACEHOLDER_REPLACE_SIZE);
-        private static readonly string SPACE_PLACEHOLDER_END = "</size>";
         public static readonly string SPACE_PLACEHOLDER_STR = "|";
-        private static readonly string SPACE_PLACEHOLDER_MEASURE = string.Format("<size={0}>{1}</size>", (int)SPACE_PLACEHOLDER_MEASURE_SIZE, SPACE_PLACEHOLDER_STR);
         
         private List<IntelligentTextDataNode> m_DataList;
         private TextGenerator m_TextGenerator;
@@ -164,7 +160,7 @@ namespace Common.Text
             {
                 color = Color.black,
                 font = TextSettings.font,
-                fontSize = TextSettings.fontSize,
+                fontSize = (int)(SPACE_PLACEHOLDER_MEASURE_SIZE + 0.5),
                 lineSpacing = 1,
                 alignByGeometry = false,
                 fontStyle = FontStyle.Normal,
@@ -175,25 +171,116 @@ namespace Common.Text
                 resizeTextForBestFit = false,
                 resizeTextMaxSize = 600,
                 resizeTextMinSize = 6,
-                richText = true,
+                richText = false,
                 scaleFactor = 1,
                 textAnchor = TextAnchor.MiddleCenter,
                 updateBounds = true,
                 verticalOverflow = VerticalWrapMode.Overflow
             };
             //update the spacing placeholder width for selected font
-            m_TextGenerator.Populate(SPACE_PLACEHOLDER_MEASURE, tempTextSettings);
-            m_SpacePlaceholderSizePerUnit = m_TextGenerator.rectExtents.size * (SPACE_PLACEHOLDER_REPLACE_SIZE / SPACE_PLACEHOLDER_MEASURE_SIZE);
+            m_TextGenerator.Populate(SPACE_PLACEHOLDER_STR, tempTextSettings);
+            m_SpacePlaceholderSizePerUnit = m_TextGenerator.rectExtents.size / SPACE_PLACEHOLDER_MEASURE_SIZE;
         }
 
-        public void UpdateText()
+        public void BuildMesh()
         {
             StringBuilder textAccumulator = new StringBuilder();
-            int size = m_DataList.Count;
-            for (int i = 0; i < size; ++i)
+            int textDataSize = m_DataList.Count;
+            for (int i = 0; i < textDataSize; ++i)
             {
                 m_DataList[i].BuildText(textAccumulator, ref this);
             }
+            textAccumulator.Append(SPACE_PLACEHOLDER_STR);
+            string finalText = textAccumulator.ToString();
+            m_TextGenerator.Populate(finalText, TextSettings);
+
+            var generatedChars = m_TextGenerator.characters;
+            float generatedSpacePlaceholderWidth = 0;
+            for(int i = SPACE_PLACEHOLDER_STR.Length; i > 0; --i)
+            {
+                var generatedSpacePlaceholderChar = generatedChars[finalText.Length - i];
+                generatedSpacePlaceholderWidth += generatedSpacePlaceholderChar.charWidth;
+            }
+            m_SpacePlaceholderSize = m_SpacePlaceholderSizePerUnit * (generatedSpacePlaceholderWidth / m_SpacePlaceholderSizePerUnit.x);
+
+            IList<UIVertex> generatorVerts = m_TextGenerator.verts;
+            int vertSize = generatorVerts.Count;
+            var initialMeshData = new IntelligentTextMeshData
+            {
+                Order = 0,
+                Verts = new List<Vector3>(vertSize),
+                Colors = new List<Color32>(vertSize),
+                Uvs = new List<Vector2>(vertSize),
+                SubMeshes = new List<IntelligentTextSubMeshData> { new IntelligentTextSubMeshData { Trinagles = new List<int>(vertSize / 4 * 6) } }
+            };
+            for (int i = 0; i < vertSize; ++i)
+            {
+                initialMeshData.Verts[i] = generatorVerts[i].position;
+                initialMeshData.Colors[i] = generatorVerts[i].color;
+                initialMeshData.Uvs[i] = generatorVerts[i].uv0;
+            }
+            List<IntelligentTextMeshData> meshSets = new List<IntelligentTextMeshData> { initialMeshData };
+            int currentVertexIndex = 0;
+
+            for (int i = 0; i < textDataSize; ++i)
+            {
+                m_DataList[i].BuildSubMesh(textAccumulator, ref this);
+            }
+
+
+
+
+            m_Mesh.vertices = tempVerts;
+            m_Mesh.colors32 = tempColours;
+            m_Mesh.uv = tempUvs;
+
+            int dataNodeCount = m_DataList.Count;
+            for (int i = 0; i < dataNodeCount; ++i)
+            {
+                var dataNode = m_DataList[i];
+                switch (dataNode.Type)
+                {
+                    case IntelligentTextDataType.None: break;
+                    case IntelligentTextDataType.Group: break;
+                    case IntelligentTextDataType.Image:
+                        break;
+                    case IntelligentTextDataType.Text:
+                        break;
+                }
+            }
+
+            int characterCount = vertSize / 4;
+            int[] tempIndices = new int[characterCount * 6];
+            for (int i = 0; i < characterCount; ++i)
+            {
+                int vertIndexStart = i * 4;
+                int trianglesIndexStart = i * 6;
+                tempIndices[trianglesIndexStart++] = vertIndexStart;
+                tempIndices[trianglesIndexStart++] = vertIndexStart + 1;
+                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
+                tempIndices[trianglesIndexStart++] = vertIndexStart;
+                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
+                tempIndices[trianglesIndexStart] = vertIndexStart + 3;
+            }
+            o_Mesh.triangles = tempIndices;
+            //TODO: setBounds manually
+            o_Mesh.RecalculateBounds();
+
+
+            if (m_Mesh != null)
+            {
+                m_Mesh.Clear();
+#if UNITY_EDITOR
+                UnityEngine.Object.DestroyImmediate(m_Mesh);
+#else
+                UnityEngine.Object.Destroy(m_Mesh);
+#endif
+            }
+            m_Mesh = new Mesh();
+            m_Mesh.name = "Text Mesh";
+            m_Mesh.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy | HideFlags.NotEditable;
+
+
 
             //TODO:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             GenerateMesh(textAccumulator.ToString());
@@ -213,7 +300,7 @@ namespace Common.Text
 
             ReplaceInsersts(document);
             BuildTextData(xmlRoot, dataRoot);
-            UpdateText();
+            BuildMesh();
         }
 
         public void GenerateMesh(string i_Text)

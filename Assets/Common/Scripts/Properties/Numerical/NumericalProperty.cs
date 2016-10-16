@@ -1,16 +1,4 @@
-﻿
-#if (NUMERICAL_PROPERTY_LOGGING_OFF)
-#undef NUMERICAL_PROPERTY_LOGGING
-
-#elif (!NUMERICAL_PROPERTY_LOGGING)
-
-#if (DEBUG)
-#define NUMERICAL_PROPERTY_LOGGING
-#endif
-
-#endif
-
-using Common.Properties.Numerical.Data;
+﻿using Common.Properties.Numerical.Data;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -429,9 +417,7 @@ namespace Common.Properties.Numerical
             }
             m_FinalModifier = i_EventData.NewModifier;
 
-#if (NUMERICAL_PROPERTY_LOGGING)
-            UnityEngine.Debug.Log(string.Format("Numerical property final modifier updated from {0} to {1}.", i_EventData.OldModifier, i_EventData.NewModifier));
-#endif
+            Logger.DebugLog("Numerical property final modifier updated from {0} to {1}.", i_EventData.OldModifier, i_EventData.NewModifier);
         }
 
         /// <summary>
@@ -444,9 +430,7 @@ namespace Common.Properties.Numerical
             m_Value = m_DataZero.Get();
             m_DataZero.ToZero();
 
-#if (NUMERICAL_PROPERTY_LOGGING)
-            UnityEngine.Debug.Log(string.Format("Numerical property value updated to {0}: {1} + {2}.", m_Value, m_BaseValue, m_FinalModifier));
-#endif
+            Logger.DebugLog("Numerical property value updated to {0}: {1} + {2}.", m_Value, m_BaseValue, m_FinalModifier);
         }
 
         /// <summary>

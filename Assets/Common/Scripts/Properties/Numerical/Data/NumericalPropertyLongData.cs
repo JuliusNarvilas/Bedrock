@@ -1,16 +1,9 @@
-﻿
-#if (NUMERICAL_PROPERTY_DATA_VALIDATION_OFF)
-#undef NUMERICAL_PROPERTY_DATA_VALIDATION
+﻿//Performs validation for number overflows and division by 0
+//#define NUMERICAL_PROPERTY_DATA_VALIDATION
 
-#elif (!NUMERICAL_PROPERTY_DATA_VALIDATION)
-
-#if (DEBUG)
+#if (DEBUG || UNITY_EDITOR)
 #define NUMERICAL_PROPERTY_DATA_VALIDATION
 #endif
-
-#endif
-
-using System.Diagnostics;
 
 namespace Common.Properties.Numerical.Data
 {
@@ -43,11 +36,13 @@ namespace Common.Properties.Numerical.Data
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
             long temp = m_Value + i_Value;
-            Debug.Assert(
-                ((temp >= m_Value) || (i_Value < 0)) &&
-                ((temp < m_Value) || (i_Value >= 0)),
-                "Number overflow."
-                );
+            Logger.DebugLogErrorIf(
+                ((temp <= m_Value) && (i_Value > 0)) ||
+                ((temp >= m_Value) && (i_Value < 0)),
+                "Number overflow: {0} + {1}.",
+                m_Value,
+                i_Value
+            );
 #endif
             m_Value += i_Value;
         }
@@ -56,11 +51,13 @@ namespace Common.Properties.Numerical.Data
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
             long temp = m_Value - i_Value;
-            Debug.Assert(
-                ((temp >= m_Value) || (i_Value > 0)) &&
-                ((temp < m_Value) || (i_Value <= 0)),
-                "Number overflow."
-                );
+            Logger.DebugLogErrorIf(
+                ((temp <= m_Value) && (i_Value < 0)) ||
+                ((temp >= m_Value) && (i_Value > 0)),
+                "Number overflow: {0} - {1}.",
+                m_Value,
+                i_Value
+            );
 #endif
             m_Value -= i_Value;
         }
@@ -69,11 +66,13 @@ namespace Common.Properties.Numerical.Data
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
             long temp = m_Value * i_Value;
-            Debug.Assert(
-                ((temp >= m_Value) || (i_Value < 0)) &&
-                ((temp < m_Value) || (i_Value >= 0)),
-                "Number overflow."
-                );
+            Logger.DebugLogErrorIf(
+                ((temp <= m_Value) && (i_Value > 1)) ||
+                ((temp >= m_Value) && (i_Value < -1)),
+                "Number overflow: {0} * {1}.",
+                m_Value,
+                i_Value
+            );
 #endif
             m_Value *= i_Value;
         }
@@ -81,10 +80,10 @@ namespace Common.Properties.Numerical.Data
         public void Divide(long i_Value)
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
-            Debug.Assert(
-                i_Value != 0,
-                "Division by 0."
-                );
+            Logger.DebugLogErrorIf(
+                i_Value == 0.0f,
+                "Division by 0.0f."
+            );
 #endif
             m_Value /= i_Value;
         }

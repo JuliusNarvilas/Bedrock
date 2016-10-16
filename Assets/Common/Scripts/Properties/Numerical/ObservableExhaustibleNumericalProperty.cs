@@ -1,22 +1,10 @@
-﻿
-#if (NUMERICAL_PROPERTY_LOGGING_OFF)
-#undef NUMERICAL_PROPERTY_LOGGING
-
-#elif (!NUMERICAL_PROPERTY_LOGGING)
-
-#if (DEBUG)
-#define NUMERICAL_PROPERTY_LOGGING
-#endif
-
-#endif
-
-using Common.Properties.Numerical.Data;
-using UnityEngine;
+﻿using Common.Properties.Numerical.Data;
 
 namespace Common.Properties.Numerical
 {
     /// <summary>
-    /// 
+    /// A child of <see cref="ExhaustibleNumericalProperty{TNumerical, TContext, TModifierReader}"/>
+    /// with added post change observable event functionality.
     /// </summary>
     /// <typeparam name="TNumerical">The type of the numerical.</typeparam>
     /// <typeparam name="TContext">The type of the context.</typeparam>
@@ -29,6 +17,11 @@ namespace Common.Properties.Numerical
         public ObservableExhaustibleNumericalProperty(INumericalPropertyData<TNumerical> i_Value) : base(i_Value)
         { }
 
+        /// <summary>
+        /// Instance update logic that can be overriden and customised.
+        /// </summary>
+        /// <param name="i_ChangeTypeMask">A mask of change type flags describing this update event.</param>
+        /// <param name="i_Context">The change context.</param>
         protected override void UpdateInternal(ENumericalPropertyChangeType i_ChangeTypeMask, TContext i_Context)
         {
             if ((m_Modifiers.Count > 0) || (ChangeSubscription != null))
@@ -66,9 +59,8 @@ namespace Common.Properties.Numerical
 
         protected void FireChangeEvent(ref NumericalPropertyChangeEventStruct<TNumerical, TContext, TModifierReader> i_EventData)
         {
-#if (NUMERICAL_PROPERTY_LOGGING)
-            Debug.Log("Numerical property change event fired.");
-#endif
+            Logger.DebugLog("Numerical property change event fired.");
+
             if (ChangeSubscription != null)
             {
                 ChangeSubscription(ref i_EventData);

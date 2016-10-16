@@ -63,21 +63,21 @@ namespace Common.Text
 
     public class IntelligentTextSubMeshData
     {
-        int[] Trinagles;
-        Material Material;
+        public List<int> Trinagles;
+        public Material Material;
     }
 
     public class IntelligentTextMeshData
     {
-        int Order;
-        Vector3[] Verts;
-        Color32[] Colors;
-        Vector2[] Uvs;
+        public int Order;
+        public List<Vector3> Verts;
+        public List<Color32> Colors;
+        public List<Vector2> Uvs;
 
-        Vector2[] Uvs2;
-        Vector4[] Tangents;
+        public List<Vector2> Uvs2;
+        public List<Vector4> Tangents;
 
-        List<IntelligentTextSubMeshData> SubMeshes;
+        public List<IntelligentTextSubMeshData> SubMeshes;
     }
 
     public enum IntelligentTextTransformPivot

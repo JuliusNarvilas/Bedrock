@@ -63,13 +63,15 @@ namespace Common.Text
         public virtual void BuildText(StringBuilder i_TextAccumulator, ref IntelligentTextParser i_Parser)
         { }
 
-        public void ApplyMeshModifiers()
+        public virtual int BuildSubMesh(int i_StartVertsIndex, List<IntelligentTextMeshData> i_MeshSets, ref IntelligentTextParser i_Parser)
         {
             int size = MeshModifier.Count;
             for (int i = 0; i < size; ++i)
             {
                 MeshModifier[i].ChangeMesh();
             }
+
+            return i_StartVertsIndex;
         }
     }
 
@@ -102,11 +104,39 @@ namespace Common.Text
         {
             i_TextAccumulator.Append(IntelligentTextSettings.Instance.Localize(Text));
         }
+        
+        public override int BuildSubMesh(int i_StartVertsIndex, List<IntelligentTextMeshData> i_MeshSets, ref IntelligentTextParser i_Parser)
+        {
+            int characterCount = Text.Length;
+            var subMeshData = new IntelligentTextSubMeshData {
+                Trinagles = new List<int>(characterCount * 6),
+                Material = i_Parser.TextSettings.font.material
+            };
+            for (int i = 0; i < characterCount; ++i)
+            {
+                int vertIndexStart = i_StartVertsIndex + i * 4;
+                int trianglesIndexStart = i * 6;
+                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart;
+                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart + 1;
+                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart + 2;
+                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart;
+                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart + 2;
+                subMeshData.Trinagles[trianglesIndexStart] = vertIndexStart + 3;
+            }
+
+            i_MeshSets[0].SubMeshes.Add(subMeshData);
+
+            int size = MeshModifier.Count;
+            for (int i = 0; i < size; ++i)
+            {
+                MeshModifier[i].ChangeMesh();
+            }
+            return i_StartVertsIndex + (characterCount * 4);
+        }
     }
 
     public class IntelligentTextDataImageNode : IntelligentTextDataNode, IIntelligentTextMeshModifier
     {
-        private int m_IndexInFinalText;
         private int m_PlaceholderLength;
 
         public Sprite Image;
@@ -129,8 +159,7 @@ namespace Common.Text
             {
                 m_PlaceholderLength = 1;
             }
-
-            m_IndexInFinalText = i_TextAccumulator.Length;
+            
             for (int i = 0; i < m_PlaceholderLength; ++i)
             {
                 i_TextAccumulator.Append(IntelligentTextParser.SPACE_PLACEHOLDER_STR);
@@ -140,6 +169,36 @@ namespace Common.Text
         public void ChangeMesh()
         {
             throw new NotImplementedException();
+        }
+
+        public override int BuildSubMesh(int i_StartVertsIndex, List<IntelligentTextMeshData> i_MeshSets, ref IntelligentTextParser i_Parser)
+        {
+            var meshData = i_MeshSets[0];
+            int vertsRemoveStart = i_StartVertsIndex + 4;
+            int vertsRemoveCount = (m_PlaceholderLength - 1) * 4;
+            if (vertsRemoveCount > 0)
+            {
+                meshData.Verts.RemoveRange(vertsRemoveStart, vertsRemoveCount);
+                meshData.Colors.RemoveRange(vertsRemoveStart, vertsRemoveCount);
+                meshData.Uvs.RemoveRange(vertsRemoveStart, vertsRemoveCount);
+            }
+
+            var subMeshData = new IntelligentTextSubMeshData
+            {
+                Trinagles = new List<int>(6),
+                //Material = TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            };
+
+            meshData.Verts[i_StartVertsIndex] = new Vector3();
+            meshData.Colors.RemoveRange(i_StartVertsIndex, vertsRemoveCount);
+            meshData.Uvs.RemoveRange(i_StartVertsIndex, vertsRemoveCount);
+
+            int size = MeshModifier.Count;
+            for (int i = 0; i < size; ++i)
+            {
+                MeshModifier[i].ChangeMesh();
+            }
+            return i_StartVertsIndex;
         }
     }
 

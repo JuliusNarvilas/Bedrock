@@ -3,7 +3,7 @@
 namespace Common.Properties.Numerical
 {
     /// <summary>
-    /// A wrapper for <see cref="Common.Properties.Numerical.NumericalProperty{TNumerical, TContext, TModifierReader}"/>
+    /// A child of <see cref="Common.Properties.Numerical.NumericalProperty{TNumerical, TContext, TModifierReader}"/>
     /// with added post change observable event functionality.
     /// </summary>
     /// <remarks>

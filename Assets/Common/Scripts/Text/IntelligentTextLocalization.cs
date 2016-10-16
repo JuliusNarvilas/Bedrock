@@ -11,25 +11,23 @@ namespace Common.Text
         public const char PLACEHOLDER_CLOSING = '}';
 
         private int m_LocalizationTextMaxCapacity;
-        public Dictionary<string, string> Localizations;
+
+        public Dictionary<string, string> TextLocalizations;
+        public Dictionary<string, IntelligentTextStyle> Styles;
         public Dictionary<string, Sprite> Images;
         public Dictionary<string, IntelligentTextTransform> Transforms;
         public Dictionary<string, string> Inserts;
-        public Dictionary<string, IntelligentTextStyle> Styles;
         public List<ResourcesDBItem> TrackedResources;
 
-        public static IntelligentTextLocalization Create()
+        public IntelligentTextLocalization()
         {
-            return new IntelligentTextLocalization()
-            {
-                m_LocalizationTextMaxCapacity = 0,
-                Localizations = new Dictionary<string, string>(),
-                Images = new Dictionary<string, Sprite>(),
-                Transforms = new Dictionary<string, IntelligentTextTransform>(),
-                Inserts = new Dictionary<string, string>(),
-                Styles = new Dictionary<string, IntelligentTextStyle>(),
-                TrackedResources = new List<ResourcesDBItem>()
-            };
+            m_LocalizationTextMaxCapacity = 0;
+            TextLocalizations = new Dictionary<string, string>();
+            Styles = new Dictionary<string, IntelligentTextStyle>();
+            Images = new Dictionary<string, Sprite>();
+            Transforms = new Dictionary<string, IntelligentTextTransform>();
+            Inserts = new Dictionary<string, string>();
+            TrackedResources = new List<ResourcesDBItem>();
         }
 
         public void Append(IntelligentTextLocalizationData i_Data)
@@ -39,7 +37,7 @@ namespace Common.Text
             for (int i = 0; i < localizationCount; ++i)
             {
                 localizationRecord = i_Data.textLocalizations[i];
-                Localizations[localizationRecord.id] = localizationRecord.data;
+                TextLocalizations[localizationRecord.id] = localizationRecord.data;
                 if(m_LocalizationTextMaxCapacity < localizationRecord.data.Length)
                 {
                     m_LocalizationTextMaxCapacity = localizationRecord.data.Length;
@@ -139,7 +137,7 @@ namespace Common.Text
                         {
                             string key = i_Text.Substring(i + 1, endIndex - i - 2);
                             string replacement;
-                            if (Localizations.TryGetValue(key, out replacement))
+                            if (TextLocalizations.TryGetValue(key, out replacement))
                             {
                                 result.Append(replacement);
                             }
@@ -174,7 +172,7 @@ namespace Common.Text
 
         public void Clear()
         {
-            Localizations.Clear();
+            TextLocalizations.Clear();
             Images.Clear();
             Transforms.Clear();
             Inserts.Clear();

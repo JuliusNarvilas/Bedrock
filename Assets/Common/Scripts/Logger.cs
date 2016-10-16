@@ -114,7 +114,7 @@ namespace Common
             }
         }
 
-        public static Logger Default = new Logger(UnityEngine.Debug.LogFormat, UnityEngine.Debug.LogWarningFormat, UnityEngine.Debug.LogErrorFormat);
+        public static readonly Logger Default = new Logger(UnityEngine.Debug.LogFormat, UnityEngine.Debug.LogWarningFormat, UnityEngine.Debug.LogErrorFormat);
 
         public static Logger Debug = Default;
         public static Logger Production = Default;

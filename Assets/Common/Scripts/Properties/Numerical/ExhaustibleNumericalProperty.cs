@@ -1,17 +1,4 @@
-﻿
-#if (NUMERICAL_PROPERTY_LOGGING_OFF)
-#undef NUMERICAL_PROPERTY_LOGGING
-
-#elif (!NUMERICAL_PROPERTY_LOGGING)
-
-#if (DEBUG)
-#define NUMERICAL_PROPERTY_LOGGING
-#endif
-
-#endif
-
-using Common.Properties.Numerical.Data;
-using UnityEngine;
+﻿using Common.Properties.Numerical.Data;
 
 namespace Common.Properties.Numerical
 {
@@ -46,11 +33,19 @@ namespace Common.Properties.Numerical
             m_Depletion = m_DataZero.Get();
         }
 
+        /// <summary>
+        /// Gets the depletion from the max value.
+        /// </summary>
+        /// <returns>The depletion.</returns>
         public TNumerical GetDepletion()
         {
             return m_Depletion;
         }
 
+        /// <summary>
+        /// Gets the maximum value currently availablue for this property.
+        /// </summary>
+        /// <returns>Max value.</returns>
         public TNumerical GetMax()
         {
             m_DataZero.Set(m_BaseValue);
@@ -60,6 +55,11 @@ namespace Common.Properties.Numerical
             return max;
         }
 
+        /// <summary>
+        /// Depletes the property further from the current max value.
+        /// </summary>
+        /// <param name="i_Depletion">The depletion amount.</param>
+        /// <param name="i_Context">The context.</param>
         public void Deplete(TNumerical i_Depletion, TContext i_Context = default(TContext))
         {
             m_DataZero.Set(m_Depletion);
@@ -71,11 +71,15 @@ namespace Common.Properties.Numerical
             UpdateInternal(changeTypeMask, i_Context);
         }
 
-        public void Restore(TNumerical i_Restore, TContext i_Context = default(TContext))
+        /// <summary>
+        /// Restores the property towards the current max value.
+        /// </summary>
+        /// <param name="i_Restoration">The restoration amount.</param>
+        /// <param name="i_Context">The context.</param>
+        public void Restore(TNumerical i_Restoration, TContext i_Context = default(TContext))
         {
-            m_DataZero.Set(i_Restore);
-            m_DataZero.AdditiveInverse();
-            Deplete(m_DataZero.Get(), i_Context);
+            m_DataZero.Set(i_Restoration);
+            Deplete(m_DataZero.AdditiveInverse(), i_Context);
         }
 
         protected void UpdateExhaustableModifiedValue()
@@ -101,11 +105,14 @@ namespace Common.Properties.Numerical
             m_Value = m_DataZero.Get();
             m_DataZero.ToZero();
 
-#if (NUMERICAL_PROPERTY_LOGGING)
-            Debug.Log(string.Format("Numerical property value updated to {0}: {1} + {2} - {3}.", m_Value, m_BaseValue, m_FinalModifier, m_Depletion));
-#endif
+            Logger.DebugLog("Numerical property value updated to {0}: {1} + {2} - {3}.", m_Value, m_BaseValue, m_FinalModifier, m_Depletion);
         }
 
+        /// <summary>
+        /// Instance update logic that can be overriden and customised.
+        /// </summary>
+        /// <param name="i_ChangeTypeMask">A mask of change type flags describing this update event.</param>
+        /// <param name="i_Context">The change context.</param>
         protected override void UpdateInternal(ENumericalPropertyChangeType i_ChangeTypeMask, TContext i_Context)
         {
             if ((m_Modifiers.Count > 0))

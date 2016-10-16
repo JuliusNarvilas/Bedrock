@@ -62,7 +62,7 @@ namespace Common.Text
         private Dictionary<string, CustomInsertProvider> m_CustomInserts = new Dictionary<string, CustomInsertProvider>();
 
         private IntelligentTextLocalizationRecord m_CurrentLocalizationRecord;
-        private IntelligentTextLocalization m_CurrentLocalization = IntelligentTextLocalization.Create();
+        private IntelligentTextLocalization m_CurrentLocalization = new IntelligentTextLocalization();
 
 
         public string CurrentLocalizationId
