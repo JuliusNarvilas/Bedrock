@@ -1,7 +1,6 @@
 ﻿using Common.IO;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEngine;
 
 namespace Common.Text

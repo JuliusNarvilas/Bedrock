@@ -67,20 +67,16 @@ namespace Common.Text
         public Material Material;
     }
 
-    public class IntelligentTextMeshData
+    public class IntelligentTextLineInfo
     {
-        public int Order;
-        public List<Vector3> Verts;
-        public List<Color32> Colors;
-        public List<Vector2> Uvs;
-
-        public List<Vector2> Uvs2;
-        public List<Vector4> Tangents;
-
-        public List<IntelligentTextSubMeshData> SubMeshes;
+        public int StartCharIndex;
+        public float StartCharTop;
+        public float Height;
+        public float PaddingTop;
+        public float PaddingBottom;
     }
 
-    public enum IntelligentTextTransformPivot
+    public enum IntelligentTextTransformAnchor
     {
         Top,
         Center,
@@ -94,6 +90,6 @@ namespace Common.Text
         public Vector2 scale;
         public Vector2 offset;
         public float rotation;
-        public IntelligentTextTransformPivot pivot;
+        public IntelligentTextTransformAnchor pivot;
     }
 }

@@ -203,6 +203,10 @@ namespace Common.Text
             }
             m_SpacePlaceholderSize = m_SpacePlaceholderSizePerUnit * (generatedSpacePlaceholderWidth / m_SpacePlaceholderSizePerUnit.x);
 
+            List<IntelligentTextLineInfo>
+            var generatedLines = m_TextGenerator.lines;
+            generatedLines[0].
+
             IList<UIVertex> generatorVerts = m_TextGenerator.verts;
             int vertSize = generatorVerts.Count;
             var initialMeshData = new IntelligentTextMeshData
