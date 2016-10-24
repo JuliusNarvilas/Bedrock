@@ -2,6 +2,11 @@
 #undef DEBUG_LOGS
 #elif UNITY_EDITOR || DEBUG
 #define DEBUG_LOGS
+#if DEBUG_ASSERTS_OFF
+#undef DEBUG_ASSERTS
+#else
+#define DEBUG_ASSERTS
+#endif
 #endif
 
 #if PRODUCTION_LOGS_OFF
@@ -16,17 +21,26 @@ namespace Common
 {
     public class Logger
     {
-        public delegate void LoggerOutputTargetFunc(string i_Message, params object[] i_Args);
+        public delegate void LoggerOutputLogTargetFunc(string i_Message, params object[] i_Args);
+        public delegate void LoggerOutputAssertTargetFunc(bool i_Assert, string i_Message, params object[] i_Args);
 
-        private LoggerOutputTargetFunc m_Log;
-        private LoggerOutputTargetFunc m_Warning;
-        private LoggerOutputTargetFunc m_Error;
-        
-        public Logger(LoggerOutputTargetFunc i_Log, LoggerOutputTargetFunc i_Warning, LoggerOutputTargetFunc i_Error)
+        private LoggerOutputLogTargetFunc m_Log;
+        private LoggerOutputLogTargetFunc m_Warning;
+        private LoggerOutputLogTargetFunc m_Error;
+        private LoggerOutputAssertTargetFunc m_Assert;
+
+        //Default assert function to bypass Unity overloaded function group assignment problems
+        private static void DefaultAssertFunc(bool i_Assert, string i_Message, params object[] i_Args)
+        {
+            UnityEngine.Debug.AssertFormat(i_Assert, i_Message, i_Args);
+        }
+
+        public Logger(LoggerOutputLogTargetFunc i_Log, LoggerOutputLogTargetFunc i_Warning, LoggerOutputLogTargetFunc i_Error, LoggerOutputAssertTargetFunc i_Assert)
         {
             m_Log = i_Log;
             m_Warning = i_Warning;
             m_Error = i_Error;
+            m_Assert = i_Assert;
         }
 
         [Conditional("DEBUG_LOGS")]
@@ -71,6 +85,14 @@ namespace Common
             }
         }
 
+        [Conditional("DEBUG_ASSERTS")]
+        public static void DebugAssert(bool i_Assertion, string i_Message, params object[] i_Args)
+        {
+            Debug.m_Assert(i_Assertion, i_Message, i_Args);
+        }
+
+
+
 
         [Conditional("PRODUCTION_LOGS")]
         public static void ProductionLog(string i_Message, params object[] i_Args)
@@ -114,7 +136,9 @@ namespace Common
             }
         }
 
-        public static readonly Logger Default = new Logger(UnityEngine.Debug.LogFormat, UnityEngine.Debug.LogWarningFormat, UnityEngine.Debug.LogErrorFormat);
+        public static readonly Logger Default = new Logger(
+            UnityEngine.Debug.LogFormat, UnityEngine.Debug.LogWarningFormat, UnityEngine.Debug.LogErrorFormat, DefaultAssertFunc
+        );
 
         public static Logger Debug = Default;
         public static Logger Production = Default;

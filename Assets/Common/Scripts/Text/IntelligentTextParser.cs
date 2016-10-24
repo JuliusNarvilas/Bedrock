@@ -258,12 +258,13 @@ namespace Common.Text
             for (int i = 0; i < characterCount; ++i)
             {
                 int vertIndexStart = i * 4;
+                int vertIndexStartPlus2 = vertIndexStart + 2;
                 int trianglesIndexStart = i * 6;
                 tempIndices[trianglesIndexStart++] = vertIndexStart;
                 tempIndices[trianglesIndexStart++] = vertIndexStart + 1;
-                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
+                tempIndices[trianglesIndexStart++] = vertIndexStartPlus2;
                 tempIndices[trianglesIndexStart++] = vertIndexStart;
-                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
+                tempIndices[trianglesIndexStart++] = vertIndexStartPlus2;
                 tempIndices[trianglesIndexStart] = vertIndexStart + 3;
             }
             o_Mesh.triangles = tempIndices;

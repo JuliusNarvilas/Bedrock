@@ -70,10 +70,9 @@ namespace Common.Text
     public class IntelligentTextLineInfo
     {
         public int StartCharIndex;
-        public float StartCharTop;
+        public float PaddingBottom;
         public float Height;
         public float PaddingTop;
-        public float PaddingBottom;
     }
 
     public enum IntelligentTextTransformAnchor

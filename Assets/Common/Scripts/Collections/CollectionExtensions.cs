@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Common.Collections
 {
@@ -16,8 +15,8 @@ namespace Common.Collections
         /// <param name="i_Index">Index of element to erase.</param>
         public static void RemoveSwap<T>(this IList<T> i_List, int i_Index)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
-            Debug.Assert(i_Index >= 0 && i_Index < i_List.Count, "Index out of bounds.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_Index >= 0 && i_Index < i_List.Count, "Index out of bounds.");
 
             int size = i_List.Count;
             if (size > 0)
@@ -40,7 +39,7 @@ namespace Common.Collections
         /// <param name="i_Element">Element to erase.</param>
         public static void RemoveSwap<T>(this IList<T> i_List, T i_Element)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             if (size > 0)
@@ -64,7 +63,7 @@ namespace Common.Collections
         /// <param name="i_Comparer">An optional comparer.</param>
         public static void InsertionSort<T>(this T[] i_Array, IComparer<T> i_Comparer = null)
         {
-            Debug.Assert(i_Array != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_Array != null, "Invalid null parameter.");
 
             IComparer<T> comparer = i_Comparer ?? Comparer<T>.Default;
             int size = i_Array.Length;
@@ -93,7 +92,7 @@ namespace Common.Collections
         /// <param name="i_Comparer">The comparer.</param>
         public static void InsertionSort<T>(this IList<T> i_List, IComparer<T> i_Comparer = null)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             IComparer<T> comparer = i_Comparer ?? Comparer<T>.Default;
             int size = i_List.Count;
@@ -119,7 +118,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<int> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -141,7 +140,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<int> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -163,7 +162,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<float> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -185,7 +184,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<float> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
             
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -207,7 +206,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<long> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -229,7 +228,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<long> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -252,7 +251,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<double> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
             
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -274,7 +273,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<double> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -297,7 +296,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<short> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -319,7 +318,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<short> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
             
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -342,7 +341,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<byte> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
             
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -364,7 +363,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<byte> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
             
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -387,7 +386,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<ulong> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -409,7 +408,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<ulong> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -432,7 +431,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<uint> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -454,7 +453,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<uint> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -477,7 +476,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<ushort> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -499,7 +498,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<ushort> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -522,7 +521,7 @@ namespace Common.Collections
 
         public static void InsertionSortAscending(this IList<sbyte> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
@@ -544,7 +543,7 @@ namespace Common.Collections
 
         public static void InsertionSortDescending(this IList<sbyte> i_List)
         {
-            Debug.Assert(i_List != null, "Invalid null parameter.");
+            Logger.DebugAssert(i_List != null, "Invalid null parameter.");
 
             int size = i_List.Count;
             for (int index = 1; index < size; ++index)
