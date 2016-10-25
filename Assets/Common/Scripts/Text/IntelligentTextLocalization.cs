@@ -77,7 +77,7 @@ namespace Common.Text
                         resource.Unload();
                     }
                 }
-                Logger.DebugLogErrorIf(
+                Log.DebugLogErrorIf(
                     !Styles.ContainsKey(styleRecord.id),
                     "IntelligentText font not found ({0}) for style id: {1}",
                     styleRecord.fontPath, styleRecord.id
@@ -103,7 +103,7 @@ namespace Common.Text
                         resource.Unload();
                     }
                 }
-                Logger.DebugLogErrorIf(
+                Log.DebugLogErrorIf(
                     !Images.ContainsKey(imageRecord.id),
                     "IntelligentText Localization image not found ({0}) for id: {1}",
                     imageRecord.path, imageRecord.id

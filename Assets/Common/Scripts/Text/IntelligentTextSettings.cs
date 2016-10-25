@@ -109,7 +109,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Logger.DebugLogError("IntelligentText Insert not found with id: {0}", i_Id);
+            Log.DebugLogError("IntelligentText Insert not found with id: {0}", i_Id);
             return string.Format("[{0}]", i_Id);
         }
 
@@ -120,7 +120,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Logger.DebugLogError("IntelligentText Style not found with id: {0}", i_Id);
+            Log.DebugLogError("IntelligentText Style not found with id: {0}", i_Id);
             return null;
         }
 
@@ -131,7 +131,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Logger.DebugLogError("IntelligentText Image not found with id: {0}", i_Id);
+            Log.DebugLogError("IntelligentText Image not found with id: {0}", i_Id);
             return null;
         }
 
@@ -142,7 +142,7 @@ namespace Common.Text
             {
                 return result;
             }
-            Logger.DebugLogError("IntelligentText Transform not found with id: {0}", i_Id);
+            Log.DebugLogError("IntelligentText Transform not found with id: {0}", i_Id);
             return null;
         }
 
@@ -212,7 +212,7 @@ namespace Common.Text
             {
                 m_LocalizationsRecords[localizationRecord.id] = localizationRecord;
             }
-            Logger.DebugLogWarningIf(m_LocalizationsRecords.Count > 0, "No LocalizationsRecords");
+            Log.DebugLogWarningIf(m_LocalizationsRecords.Count > 0, "No LocalizationsRecords");
 
             string savedLocalization = PlayerPrefs.GetString(LOCALIZATION_SAVE_ID, string.Empty);
             if(string.IsNullOrEmpty(savedLocalization))

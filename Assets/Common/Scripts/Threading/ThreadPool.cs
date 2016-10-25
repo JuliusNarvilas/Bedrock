@@ -125,7 +125,7 @@ namespace Common.Threading
 
             public ThreadPoolJob(ThreadPool i_ThreadPool)
             {
-                Debug.Assert(i_ThreadPool != null, "Invalid thread pool argument");
+                Log.DebugAssert(i_ThreadPool != null, "Invalid thread pool argument");
                 m_ThreadPool = i_ThreadPool;
 
                 m_Thread = new Thread(Run);

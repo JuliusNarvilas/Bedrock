@@ -19,7 +19,7 @@ public class SelectionManagerBehaviour : MonoBehaviour
     
     static public SelectionManagerBehaviour Get()
     {
-        Debug.Assert(s_Instance != null, "Requesting uninitialised SelectionManager.");
+        Common.Log.DebugAssert(s_Instance != null, "Requesting uninitialised SelectionManager.");
         return s_Instance;
     }
 
@@ -35,7 +35,7 @@ public class SelectionManagerBehaviour : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Assert(s_Instance == null, "SelectionManager already initialised.");
+        Common.Log.DebugAssert(s_Instance == null, "SelectionManager already initialised.");
         if (s_Instance == null)
         {
             s_Instance = this;

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.SceneManagement;
 
 public class LoadingManagerBehaviour : MonoBehaviour {
@@ -29,8 +28,8 @@ public class LoadingManagerBehaviour : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Debug.Assert(!string.IsNullOrEmpty(DefaultSceneName), "Default loading scene is empty.");
-        Debug.Assert(!string.IsNullOrEmpty(s_LoadingSceneName), "Loading scene is empty.");
+        Common.Log.DebugAssert(!string.IsNullOrEmpty(DefaultSceneName), "Default loading scene is empty.");
+        Common.Log.DebugAssert(!string.IsNullOrEmpty(s_LoadingSceneName), "Loading scene is empty.");
 
         if(string.IsNullOrEmpty(s_LoadingSceneName))
         {

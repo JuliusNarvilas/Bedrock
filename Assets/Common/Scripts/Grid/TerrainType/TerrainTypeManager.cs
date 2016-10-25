@@ -10,7 +10,7 @@ namespace Common.Grid.TerrainType
 
         public void Register(TerrainTypeData<TUserData> i_TerrainTypeData)
         {
-            Debug.Assert(i_TerrainTypeData != null, "invalid terrain type data argument.");
+            Log.DebugAssert(i_TerrainTypeData != null, "invalid terrain type data argument.");
 
             for(int i = m_TerrainTypes.Count; i < i_TerrainTypeData.Index; ++i)
             {
@@ -21,7 +21,7 @@ namespace Common.Grid.TerrainType
 
         public TerrainTypeData<TUserData> Get(int i_Index)
         {
-            Debug.Assert(i_Index >= 0, string.Format("Invalid index argument: {0}", i_Index));
+            Log.DebugAssert(i_Index >= 0, string.Format("Invalid index argument: {0}", i_Index));
 
             if(m_TerrainTypes.Count > i_Index)
             {

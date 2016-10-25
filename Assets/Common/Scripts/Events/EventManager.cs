@@ -37,7 +37,7 @@ namespace Common.Events
 #if DEBUG
             if (Hash == i_Other.Hash)
             {
-                Debug.Assert(Name == i_Other.Name, "EventName \"" + Name + "\" Hash " + Hash + " incorrectley matched with EventName \"" + i_Other.Name + "\".");
+                Log.DebugAssert(Name == i_Other.Name, "EventName \"" + Name + "\" Hash " + Hash + " incorrectley matched with EventName \"" + i_Other.Name + "\".");
                 return true;
             }
             return false;
@@ -125,7 +125,7 @@ namespace Common.Events
         /// <param name="i_MaxChannels">The maximum number of channels.</param>
         public EventManager(int i_MaxChannels)
         {
-            Debug.Assert(i_MaxChannels > 0 && i_MaxChannels <= (sizeof(long) * 8), "Max number of event channels must be a positive number");
+            Log.DebugAssert(i_MaxChannels > 0 && i_MaxChannels <= (sizeof(long) * 8), "Max number of event channels must be a positive number");
             m_ChannelSubscriptions = new EventChannel[i_MaxChannels];
         }
 
@@ -136,7 +136,7 @@ namespace Common.Events
         /// <param name="i_Response">The event response.</param>
         public void SubscribeToChannel(int i_ChannelIndex, EventHandler i_Response)
         {
-            Debug.Assert(i_ChannelIndex >= 0 && i_ChannelIndex < m_ChannelSubscriptions.Length, "Channel index out of bounds.");
+            Log.DebugAssert(i_ChannelIndex >= 0 && i_ChannelIndex < m_ChannelSubscriptions.Length, "Channel index out of bounds.");
             m_ChannelSubscriptions[i_ChannelIndex].Subscription += i_Response;
         }
 
@@ -165,7 +165,7 @@ namespace Common.Events
         /// <param name="i_Response">The event response.</param>
         public void UnsubscribeFromChannel(int i_ChannelIndex, EventHandler i_Response)
         {
-            Debug.Assert(i_ChannelIndex >= 0 && i_ChannelIndex < m_ChannelSubscriptions.Length, "Channel index out of bounds.");
+            Log.DebugAssert(i_ChannelIndex >= 0 && i_ChannelIndex < m_ChannelSubscriptions.Length, "Channel index out of bounds.");
             m_ChannelSubscriptions[i_ChannelIndex].Subscription -= i_Response;
         }
 
@@ -208,7 +208,7 @@ namespace Common.Events
         /// <param name="i_EventContext">The event context.</param>
         public void FireEvent(int i_ChannelIndex, EventName i_Name, object i_EventContext = null)
         {
-            Debug.Assert(i_ChannelIndex >= 0 && i_ChannelIndex < m_ChannelSubscriptions.Length, "Channel index out of bounds.");
+            Log.DebugAssert(i_ChannelIndex >= 0 && i_ChannelIndex < m_ChannelSubscriptions.Length, "Channel index out of bounds.");
             m_ChannelSubscriptions[i_ChannelIndex].Fire(i_Name, i_EventContext);
         }
 

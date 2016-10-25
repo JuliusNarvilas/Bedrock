@@ -14,13 +14,13 @@ namespace Common.Grid.TerrainType
 
         public TerrainTypeData(int i_Index, int i_Cost, string i_Name, TUserData i_UserData)
         {
-            Debug.Assert(
+            Log.DebugAssert(
                 i_Index.IsInRange(byte.MinValue, byte.MaxValue),
                 string.Format("Invalid index argument: {0}. Expected range: [{1};{2}]", i_Index, byte.MinValue, byte.MaxValue));
-            Debug.Assert(
+            Log.DebugAssert(
                 i_Cost.IsInRange(-1, sbyte.MaxValue),
                 string.Format("Invalid cost argument: {0}. Expected range: [{1};{2}]", i_Cost, -1, short.MaxValue));
-            Debug.Assert(
+            Log.DebugAssert(
                 !string.IsNullOrEmpty(i_Name),
                 "Invalid name argument.");
 
@@ -37,13 +37,13 @@ namespace Common.Grid.TerrainType
             Name = info.GetString("name");
             UserData = (TUserData)info.GetValue("userData", typeof(TUserData));
 
-            Debug.Assert(
+            Log.DebugAssert(
                 Index.IsInRange(byte.MinValue, byte.MaxValue),
                 string.Format("Invalid index: {0}. Expected range: [{1};{2}]", Index, byte.MinValue, byte.MaxValue));
-            Debug.Assert(
+            Log.DebugAssert(
                 Cost.IsInRange(byte.MinValue, byte.MaxValue),
                 string.Format("Invalid cost: {0}. Expected range: [{1};{2}]", Cost, byte.MinValue, byte.MaxValue));
-            Debug.Assert(
+            Log.DebugAssert(
                 !string.IsNullOrEmpty(Name),
                 "Invalid name.");
         }

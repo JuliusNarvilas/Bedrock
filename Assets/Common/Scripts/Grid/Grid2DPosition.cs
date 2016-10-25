@@ -9,11 +9,11 @@ namespace Common.Grid
 
         public Grid2DPosition(int i_IndexX = 0, int i_IndexY = 0)
         {
-            Debug.Assert(
+            Log.DebugAssert(
                 MathHelper.InRange(0, ushort.MaxValue, i_IndexX),
                 "X index out of range"
                 );
-            Debug.Assert(
+            Log.DebugAssert(
                 MathHelper.InRange(0, ushort.MaxValue, i_IndexY),
                 "Y index out of range"
                 );

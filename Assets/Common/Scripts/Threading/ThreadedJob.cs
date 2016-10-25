@@ -22,7 +22,7 @@ namespace Common.Threading
 
         public ThreadedJob(Func<TResult> i_Function)
         {
-            Debug.Assert(i_Function != null, "invalid Function argument.");
+            Log.DebugAssert(i_Function != null, "invalid Function argument.");
             m_RunFunc = i_Function;
 
             m_Thread = new Thread(Run);

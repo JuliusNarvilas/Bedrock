@@ -51,7 +51,7 @@ namespace Common.Grid
             /// <param name="i_Tile">The tile data.</param>
             public GridElement(Grid2DTile<TGridTileData, TTerrainData> i_Tile)
             {
-                Debug.Assert(i_Tile != null, "Tile argument invalid.");
+                Log.DebugAssert(i_Tile != null, "Tile argument invalid.");
                 Tile = i_Tile;
                 Reset();
             }
@@ -130,7 +130,7 @@ namespace Common.Grid
             /// <param name="i_EndPosition">The i_ end position.</param>
             public Grid2DPath(Grid2D<TGridTileData, TTerrainData> i_Grid, Grid2DPosition i_StartPos, Grid2DPosition i_EndPosition)
             {
-                Debug.Assert(i_Grid != null, "Invalid grid argument.");
+                Log.DebugAssert(i_Grid != null, "Invalid grid argument.");
                 m_Grid = i_Grid;
                 m_FinishElement = m_Grid.GetElement(i_EndPosition);
 
@@ -321,7 +321,7 @@ namespace Common.Grid
         /// <param name="i_TerrainTypeManager">The terrain type manager.</param>
         public Grid2D(TerrainTypeManager<TTerrainData> i_TerrainTypeManager)
         {
-            Debug.Assert(i_TerrainTypeManager != null, "Invalid TerrainTypeManager argument.");
+            Log.DebugAssert(i_TerrainTypeManager != null, "Invalid TerrainTypeManager argument.");
             m_TerrainTypeManager = i_TerrainTypeManager;
         }
 

@@ -28,7 +28,7 @@ namespace Common.Properties
 
             public MutexPropertyLock(MutexPropertyProvider<T, TProperty> i_MutexProperty)
             {
-                Debug.Assert(i_MutexProperty != null, "Invalid null property.");
+                Log.DebugAssert(i_MutexProperty != null, "Invalid null property.");
                 m_Mutex = i_MutexProperty.m_Mutex;
                 m_Disposed = false;
                 Property = i_MutexProperty.Property;

@@ -189,7 +189,7 @@ namespace Common.Properties.Numerical
         /// <returns>Returns 1, 0 or -1 depending if the second modifier is less than, equal to or greater then the first one.</returns>
         public int Compare(INumericalPropertyModifier<TNumerical, TContext, TModifierReader> i_ObjA, INumericalPropertyModifier<TNumerical, TContext, TModifierReader> i_ObjB)
         {
-            Debug.Assert(i_ObjA != null && i_ObjB != null, "Invalid null parameter.");
+            Log.DebugAssert(i_ObjA != null && i_ObjB != null, "Invalid null parameter.");
             return i_ObjA.GetOrder().CompareTo(i_ObjB.GetOrder());
         }
     }
@@ -310,7 +310,7 @@ namespace Common.Properties.Numerical
         /// <returns>Modifier reader interface.</returns>
         public TModifierReader GetModifier(int i_Index)
         {
-            Debug.Assert(i_Index < m_Modifiers.Count, "Index out of bounds.");
+            Log.DebugAssert(i_Index < m_Modifiers.Count, "Index out of bounds.");
             return m_Modifiers[i_Index].GetReader();
         }
         /// <summary>
@@ -320,7 +320,7 @@ namespace Common.Properties.Numerical
         /// <param name="i_Context">Contextual data about this change.</param>
         public void AddModifier(INumericalPropertyModifier<TNumerical, TContext, TModifierReader> i_Modifier, TContext i_Context = default(TContext))
         {
-            Debug.Assert(i_Modifier != null, "Invalid null paremeter.");
+            Log.DebugAssert(i_Modifier != null, "Invalid null paremeter.");
             m_Modifiers.Add(i_Modifier);
             m_Modifiers.InsertionSort(s_SortComparer);
             ENumericalPropertyChangeType changeTypeMask = ENumericalPropertyChangeType.ModifierAdd;
@@ -417,7 +417,7 @@ namespace Common.Properties.Numerical
             }
             m_FinalModifier = i_EventData.NewModifier;
 
-            Logger.DebugLog("Numerical property final modifier updated from {0} to {1}.", i_EventData.OldModifier, i_EventData.NewModifier);
+            Log.DebugLog("Numerical property final modifier updated from {0} to {1}.", i_EventData.OldModifier, i_EventData.NewModifier);
         }
 
         /// <summary>
@@ -430,7 +430,7 @@ namespace Common.Properties.Numerical
             m_Value = m_DataZero.Get();
             m_DataZero.ToZero();
 
-            Logger.DebugLog("Numerical property value updated to {0}: {1} + {2}.", m_Value, m_BaseValue, m_FinalModifier);
+            Log.DebugLog("Numerical property value updated to {0}: {1} + {2}.", m_Value, m_BaseValue, m_FinalModifier);
         }
 
         /// <summary>
@@ -454,7 +454,7 @@ namespace Common.Properties.Numerical
             /// <param name="i_Context">The change context.</param>
             public ChangeBundle(NumericalProperty<TNumerical, TContext, TModifierReader> i_Property, TContext i_Context = default(TContext))
             {
-                Debug.Assert(i_Property != null, "Invalid null property.");
+                Log.DebugAssert(i_Property != null, "Invalid null property.");
                 m_Property = i_Property;
                 m_BaseValue = i_Property.m_BaseValue;
                 m_ChangeTypeMask = ENumericalPropertyChangeType.Bundle;

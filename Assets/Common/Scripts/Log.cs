@@ -1,25 +1,37 @@
 ﻿#if DEBUG_LOGS_OFF
-#undef DEBUG_LOGS
-#elif UNITY_EDITOR || DEBUG
-#define DEBUG_LOGS
-#if DEBUG_ASSERTS_OFF
-#undef DEBUG_ASSERTS
+    #undef DEBUG_LOGS
+    #if !DEBUG_ASSERTS
+        #define DEBUG_ASSERTS_OFF
+    #endif
+#elif UNITY_EDITOR || DEBUG || DEBUG_LOGS
+    #define DEBUG_LOGS
+    #if DEBUG_ASSERTS_OFF
+        #undef DEBUG_ASSERTS
+    #else
+        #define DEBUG_ASSERTS
+    #endif
 #else
-#define DEBUG_ASSERTS
-#endif
+    #define DEBUG_LOGS_OFF
+    #if !DEBUG_ASSERTS
+        #define DEBUG_ASSERTS_OFF
+    #endif
 #endif
 
 #if PRODUCTION_LOGS_OFF
-#undef PRODUCTION_LOGS
+    #undef PRODUCTION_LOGS
+    #if !PRODUCTION_ASSERTS
+        #define PRODUCTION_ASSERTS_OFF
+    #endif
 #else
-#define PRODUCTION_LOGS
+    #define PRODUCTION_LOGS
+    #define PRODUCTION_ASSERTS
 #endif
 
 using System.Diagnostics;
 
 namespace Common
 {
-    public class Logger
+    public class Log
     {
         public delegate void LoggerOutputLogTargetFunc(string i_Message, params object[] i_Args);
         public delegate void LoggerOutputAssertTargetFunc(bool i_Assert, string i_Message, params object[] i_Args);
@@ -35,7 +47,7 @@ namespace Common
             UnityEngine.Debug.AssertFormat(i_Assert, i_Message, i_Args);
         }
 
-        public Logger(LoggerOutputLogTargetFunc i_Log, LoggerOutputLogTargetFunc i_Warning, LoggerOutputLogTargetFunc i_Error, LoggerOutputAssertTargetFunc i_Assert)
+        public Log(LoggerOutputLogTargetFunc i_Log, LoggerOutputLogTargetFunc i_Warning, LoggerOutputLogTargetFunc i_Error, LoggerOutputAssertTargetFunc i_Assert)
         {
             m_Log = i_Log;
             m_Warning = i_Warning;
@@ -136,11 +148,17 @@ namespace Common
             }
         }
 
-        public static readonly Logger Default = new Logger(
+        [Conditional("PRODUCTION_ASSERTS")]
+        public static void ProductionAssert(bool i_Assertion, string i_Message, params object[] i_Args)
+        {
+            Debug.m_Assert(i_Assertion, i_Message, i_Args);
+        }
+
+        public static readonly Log Default = new Log(
             UnityEngine.Debug.LogFormat, UnityEngine.Debug.LogWarningFormat, UnityEngine.Debug.LogErrorFormat, DefaultAssertFunc
         );
 
-        public static Logger Debug = Default;
-        public static Logger Production = Default;
+        public static Log Debug = Default;
+        public static Log Production = Default;
     }
 }

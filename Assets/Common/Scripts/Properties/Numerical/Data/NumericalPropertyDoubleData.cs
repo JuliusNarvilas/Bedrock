@@ -36,7 +36,7 @@ namespace Common.Properties.Numerical.Data
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
             double temp = m_Value + i_Value;
-            Logger.DebugLogErrorIf(
+            Log.DebugLogErrorIf(
                 ((temp <= m_Value) && (i_Value > 0)) ||
                 ((temp >= m_Value) && (i_Value < 0)),
                 "Number overflow: {0} + {1}.",
@@ -51,7 +51,7 @@ namespace Common.Properties.Numerical.Data
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
             double temp = m_Value - i_Value;
-            Logger.DebugLogErrorIf(
+            Log.DebugLogErrorIf(
                 ((temp <= m_Value) && (i_Value < 0)) ||
                 ((temp >= m_Value) && (i_Value > 0)),
                 "Number overflow: {0} - {1}.",
@@ -66,7 +66,7 @@ namespace Common.Properties.Numerical.Data
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
             double temp = m_Value * i_Value;
-            Logger.DebugLogErrorIf(
+            Log.DebugLogErrorIf(
                 ((temp <= m_Value) && (i_Value > 1)) ||
                 ((temp >= m_Value) && (i_Value < -1)),
                 "Number overflow: {0} * {1}.",
@@ -80,7 +80,7 @@ namespace Common.Properties.Numerical.Data
         public void Divide(double i_Value)
         {
 #if (NUMERICAL_PROPERTY_DATA_VALIDATION)
-            Logger.DebugLogErrorIf(
+            Log.DebugLogErrorIf(
                 i_Value == 0.0,
                 "Division by 0.0."
             );
