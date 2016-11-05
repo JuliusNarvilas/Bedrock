@@ -82,9 +82,9 @@ namespace Common.Text
             if ((i_ObjA.m_Text == i_ObjB.m_Text) != (i_ObjA.m_Hash == i_ObjB.m_Hash))
             {
 #if HASHED_STRING_FORCE_HASH_EQUALS
-                Debug.LogErrorFormat(
+                Log.DebugLog(
 #else
-                Debug.LogWarningFormat(
+                Log.DebugLogWarning(
 #endif
                     "Incorrect IntelligentTextId early match due to a hash clash ({0} == {1})", i_ObjA.m_Text, i_ObjB.m_Text);
             }

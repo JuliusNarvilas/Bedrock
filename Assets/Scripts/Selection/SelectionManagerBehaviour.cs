@@ -59,7 +59,7 @@ public class SelectionManagerBehaviour : MonoBehaviour
                 }
             }
             //Deselect old
-            Debug.Log(m_LastSelectableGameObject.name + " deselected.");
+            Common.Log.DebugLog("{0} deselected.", m_LastSelectableGameObject.name);
             m_LastSelectableGameObject = null;
             m_InspectedSelectableComponent.OnDeselected();
             m_InspectedSelectableComponent = null;
@@ -95,7 +95,7 @@ public class SelectionManagerBehaviour : MonoBehaviour
                 {
                     if (m_SelectableState != SelectableState.Selected)
                     {
-                        Debug.Log(hitGameObject.name + " selected.");
+                        Common.Log.DebugLog("{0} selected.", hitGameObject.name);
                         m_SelectableState = SelectableState.Selected;
                         m_InspectedSelectableComponent.OnSelected();
                     }
@@ -104,7 +104,7 @@ public class SelectionManagerBehaviour : MonoBehaviour
                 {
                     //activate new
                     m_LastSelectableGameObject = hitGameObject;
-                    Debug.Log(hitGameObject.name + " selecting.");
+                    Common.Log.DebugLog("{0} selecting.", hitGameObject.name);
                     m_SelectableState = SelectableState.Selecting;
                     m_InspectedSelectableComponent.OnSelecting();
                 }

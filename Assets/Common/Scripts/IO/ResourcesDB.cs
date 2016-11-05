@@ -188,7 +188,7 @@ namespace Common.IO
                 var obj = UnityEditor.AssetDatabase.LoadAssetAtPath(assetPath, typeof(UnityEngine.Object));
                 if (obj == null)
                 {
-                    Debug.LogWarning("ResourceDB: File at path " + assetPath + " couldn't be loaded and is ignored. Probably not an asset?!");
+                    Log.ProductionLogWarning("ResourceDB: File at path {0} couldn't be loaded and is ignored. Probably not an asset?!", assetPath);
                     continue;
                 }
                 string type = obj.GetType().AssemblyQualifiedName;

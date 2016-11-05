@@ -53,6 +53,7 @@ namespace Common.Text
             Type = i_Type;
             InteractorId = i_InteractorId;
             Children = i_Children;
+            MeshModifier = new List<IIntelligentTextMeshModifier>();
         }
 
         public virtual bool Merge(IntelligentTextDataNode i_Node)
@@ -115,13 +116,12 @@ namespace Common.Text
             for (int i = 0; i < characterCount; ++i)
             {
                 int vertIndexStart = i_StartVertsIndex + i * 4;
-                int trianglesIndexStart = i * 6;
-                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart;
-                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart + 1;
-                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart + 2;
-                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart;
-                subMeshData.Trinagles[trianglesIndexStart++] = vertIndexStart + 2;
-                subMeshData.Trinagles[trianglesIndexStart] = vertIndexStart + 3;
+                subMeshData.Trinagles.Add(vertIndexStart);
+                subMeshData.Trinagles.Add(vertIndexStart + 1);
+                subMeshData.Trinagles.Add(vertIndexStart + 2);
+                subMeshData.Trinagles.Add(vertIndexStart);
+                subMeshData.Trinagles.Add(vertIndexStart + 2);
+                subMeshData.Trinagles.Add(vertIndexStart + 3);
             }
 
             i_MeshSets[0].SubMeshes.Add(subMeshData);

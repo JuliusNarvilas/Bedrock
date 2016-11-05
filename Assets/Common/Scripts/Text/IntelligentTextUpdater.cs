@@ -2,24 +2,20 @@
 
 namespace Common.Text
 {
-    [RequireComponent(typeof(IntelligentText))]
-    public class IntelligentTextUpdater : MonoBehaviour
+    public class IntelligentTextUpdater : IntelligentText
     {
-        private IntelligentText m_IntelligentText;
+        public enum UpdateType
+        {
+            Update,
+            Rebuild,
+            Refresh
+        }
+        
         private float m_TimeAccumulator = 0;
 
         public float UpdateTimer = 0;
-        public bool ScaledTime = false;
-
-        private void Awake()
-        {
-            m_IntelligentText = GetComponent<IntelligentText>();
-            if (m_IntelligentText == null)
-            {
-                enabled = false;
-                Debug.LogWarningFormat("IntelligentTextUpdater with no IntelligentText on GameObject: {0}", gameObject.name);
-            }
-        }
+        public UpdateType Type = UpdateType.Update;
+        public bool ScaledTime = true;
 
         private void Update()
         {
@@ -27,7 +23,18 @@ namespace Common.Text
             if(m_TimeAccumulator >= UpdateTimer)
             {
                 m_TimeAccumulator -= UpdateTimer;
-                m_IntelligentText.UpdateText();
+                switch(Type)
+                {
+                    case UpdateType.Update:
+                        UpdateText();
+                        break;
+                    case UpdateType.Rebuild:
+                        RebuildText();
+                        break;
+                    case UpdateType.Refresh:
+                        Refresh();
+                        break;
+                }
             }
         }
     }

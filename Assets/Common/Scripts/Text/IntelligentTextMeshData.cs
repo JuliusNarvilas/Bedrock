@@ -42,9 +42,26 @@ namespace Common.Text
 
     public class IntelligentTextMeshData
     {
+        public class Sorter : IComparer<IntelligentTextMeshData>
+        {
+            private int m_Ascending;
+
+            private Sorter(bool i_Ascending)
+            {
+                m_Ascending = i_Ascending ? 1 : -1;
+            }
+
+            public int Compare(IntelligentTextMeshData x, IntelligentTextMeshData y)
+            {
+                return x.Order.CompareTo(y) * m_Ascending;
+            }
+
+            static public readonly Sorter Ascending = new Sorter(true);
+            static public readonly Sorter Descending = new Sorter(false);
+        }
+
         public int Order;
         public int TextLength;
-        public Bounds ExtentBounds;
         public List<IntelligentTextLineInfo> Lines;
         public List<Vector3> Verts;
         public List<Color32> Colors;
@@ -54,6 +71,7 @@ namespace Common.Text
         public List<Vector4> Tangents;
 
         public List<IntelligentTextSubMeshData> SubMeshes;
+        public Rect ExtentRect;
 
 
         public void RemoveChars(int i_CharStartIndex, int i_Count)
@@ -297,7 +315,7 @@ namespace Common.Text
                 case TextAnchor.UpperLeft:
                 case TextAnchor.UpperCenter:
                 case TextAnchor.UpperRight:
-                    FitMeshesDownY(0, ExtentBounds.size.y);
+                    FitMeshesDownY(0, ExtentRect.height);
                     break;
                 case TextAnchor.MiddleLeft:
                 case TextAnchor.MiddleCenter:
@@ -314,7 +332,7 @@ namespace Common.Text
                                 break;
                             }
                         }
-                        float middleLineTopY = ExtentBounds.extents.y - halfHeightTracker;
+                        float middleLineTopY = (ExtentRect.height * 0.5f) - halfHeightTracker;
                         FitMeshesDownY(middleLineIndex, middleLineTopY);
                         FitMeshesUpY(middleLineIndex + 1, middleLineTopY);
                     }

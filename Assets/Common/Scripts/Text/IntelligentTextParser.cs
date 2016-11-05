@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Xml;
 using UnityEngine;
+using Common.Collections;
 
 namespace Common.Text
 {
@@ -28,14 +28,17 @@ namespace Common.Text
         private Vector2 m_SpacePlaceholderSizePerUnit;
         private Vector2 m_SpacePlaceholderSize;
         private Mesh m_Mesh;
+        private List<Material> m_Materials;
 
         public TextGenerationSettings TextSettings;
+        public Rect Rectangle;
 
         public Vector2 SpacePlaceholderSizePerUnit { get { return m_SpacePlaceholderSizePerUnit; } }
         public Vector2 SpacePlaceholderEstimatedSize { get { return m_SpacePlaceholderSizePerUnit * TextSettings.fontSize; } }
         public Vector2 SpacePlaceholderSize { get { return m_SpacePlaceholderSize; } }
         public IntelligentTextDataNode DataRoot { get { return m_DataList[0]; } }
         public Mesh Mesh { get { return m_Mesh; } }
+        public List<Material> Materials { get { return m_Materials; } }
 
         private void ReplaceInsersts(XmlDocument i_Document)
         {
@@ -182,8 +185,22 @@ namespace Common.Text
             m_SpacePlaceholderSizePerUnit = m_TextGenerator.rectExtents.size / SPACE_PLACEHOLDER_MEASURE_SIZE;
         }
 
-        public void BuildMesh()
+        public void RebuildMesh()
         {
+            if (m_Mesh != null)
+            {
+                m_Mesh.Clear();
+#if UNITY_EDITOR
+                UnityEngine.Object.DestroyImmediate(m_Mesh);
+#else
+                UnityEngine.Object.Destroy(m_Mesh);
+#endif
+            }
+            m_Mesh = new Mesh();
+            m_Mesh.name = "Text Mesh";
+            m_Mesh.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy | HideFlags.NotEditable;
+
+
             StringBuilder textAccumulator = new StringBuilder();
             int textDataSize = m_DataList.Count;
             for (int i = 0; i < textDataSize; ++i)
@@ -203,98 +220,103 @@ namespace Common.Text
             }
             m_SpacePlaceholderSize = m_SpacePlaceholderSizePerUnit * (generatedSpacePlaceholderWidth / m_SpacePlaceholderSizePerUnit.x);
 
-            List<IntelligentTextLineInfo>
-            var generatedLines = m_TextGenerator.lines;
-            generatedLines[0].
 
+            var generatedLines = m_TextGenerator.lines;
+            int lineCount = generatedLines.Count;
             IList<UIVertex> generatorVerts = m_TextGenerator.verts;
             int vertSize = generatorVerts.Count;
-            var initialMeshData = new IntelligentTextMeshData
+            IntelligentTextMeshData initialMeshData = new IntelligentTextMeshData
             {
                 Order = 0,
+                TextLength = finalText.Length,
+                Lines = new List<IntelligentTextLineInfo>(lineCount),
                 Verts = new List<Vector3>(vertSize),
                 Colors = new List<Color32>(vertSize),
                 Uvs = new List<Vector2>(vertSize),
-                SubMeshes = new List<IntelligentTextSubMeshData> { new IntelligentTextSubMeshData { Trinagles = new List<int>(vertSize / 4 * 6) } }
+                SubMeshes = new List<IntelligentTextSubMeshData> {
+                    new IntelligentTextSubMeshData {
+                        Trinagles = new List<int>(vertSize / 4 * 6),
+                        Material = TextSettings.font.material
+                    }
+                },
+                ExtentRect = Rectangle
             };
+            for(int i = 0; i < lineCount; ++i)
+            {
+                var line = new IntelligentTextLineInfo() {
+                    Height = generatedLines[i].height,
+                    StartCharIndex = generatedLines[i].startCharIdx
+                };
+                initialMeshData.Lines.Add(line);
+            }
             for (int i = 0; i < vertSize; ++i)
             {
-                initialMeshData.Verts[i] = generatorVerts[i].position;
-                initialMeshData.Colors[i] = generatorVerts[i].color;
-                initialMeshData.Uvs[i] = generatorVerts[i].uv0;
+                initialMeshData.Verts.Add(generatorVerts[i].position);
+                initialMeshData.Colors.Add(generatorVerts[i].color);
+                initialMeshData.Uvs.Add(generatorVerts[i].uv0);
             }
-            List<IntelligentTextMeshData> meshSets = new List<IntelligentTextMeshData> { initialMeshData };
-            int currentVertexIndex = 0;
+            List<IntelligentTextMeshData> meshDataList = new List<IntelligentTextMeshData>() { initialMeshData };
 
+
+            int currentVertexIndex = 0;
             for (int i = 0; i < textDataSize; ++i)
             {
-                m_DataList[i].BuildSubMesh(textAccumulator, ref this);
+                currentVertexIndex = m_DataList[i].BuildSubMesh(currentVertexIndex, meshDataList, ref this);
             }
 
+            meshDataList.InsertionSort(IntelligentTextMeshData.Sorter.Ascending);
 
-
-
-            m_Mesh.vertices = tempVerts;
-            m_Mesh.colors32 = tempColours;
-            m_Mesh.uv = tempUvs;
-
-            int dataNodeCount = m_DataList.Count;
-            for (int i = 0; i < dataNodeCount; ++i)
+            var combinedData = meshDataList[0];
+            for (int i = 1; i < meshDataList.Count; ++i)
             {
-                var dataNode = m_DataList[i];
-                switch (dataNode.Type)
+                var tempMeshData = meshDataList[i];
+
+                //adjust the indices to work with the merged vertex data
+                int combinedDataVertCount = combinedData.Verts.Count;
+                int subMeshCount = tempMeshData.SubMeshes.Count;
+                for(int j = 0; j < subMeshCount; ++j)
                 {
-                    case IntelligentTextDataType.None: break;
-                    case IntelligentTextDataType.Group: break;
-                    case IntelligentTextDataType.Image:
-                        break;
-                    case IntelligentTextDataType.Text:
-                        break;
+                    var subMesh = tempMeshData.SubMeshes[i];
+                    int indicesCount = subMesh.Trinagles.Count;
+                    for (int k = 0; k < indicesCount; ++k)
+                    {
+                        subMesh.Trinagles[k] += combinedDataVertCount;
+                    }
                 }
+
+                combinedData.Verts.AddRange(tempMeshData.Verts);
+                combinedData.Colors.AddRange(tempMeshData.Colors);
+                combinedData.Uvs.AddRange(tempMeshData.Uvs);
+                combinedData.SubMeshes.AddRange(tempMeshData.SubMeshes);
             }
 
-            int characterCount = vertSize / 4;
-            int[] tempIndices = new int[characterCount * 6];
-            for (int i = 0; i < characterCount; ++i)
+            m_Mesh.vertices = combinedData.Verts.ToArray();
+            m_Mesh.colors32 = combinedData.Colors.ToArray();
+            m_Mesh.uv = combinedData.Uvs.ToArray();
+            int combinedSubMeshCount = combinedData.SubMeshes.Count;
+            m_Mesh.subMeshCount = combinedSubMeshCount;
+            if(m_Materials == null)
             {
-                int vertIndexStart = i * 4;
-                int vertIndexStartPlus2 = vertIndexStart + 2;
-                int trianglesIndexStart = i * 6;
-                tempIndices[trianglesIndexStart++] = vertIndexStart;
-                tempIndices[trianglesIndexStart++] = vertIndexStart + 1;
-                tempIndices[trianglesIndexStart++] = vertIndexStartPlus2;
-                tempIndices[trianglesIndexStart++] = vertIndexStart;
-                tempIndices[trianglesIndexStart++] = vertIndexStartPlus2;
-                tempIndices[trianglesIndexStart] = vertIndexStart + 3;
+                m_Materials = new List<Material>(combinedSubMeshCount);
             }
-            o_Mesh.triangles = tempIndices;
-            //TODO: setBounds manually
-            o_Mesh.RecalculateBounds();
-
-
-            if (m_Mesh != null)
+            else
             {
-                m_Mesh.Clear();
-#if UNITY_EDITOR
-                UnityEngine.Object.DestroyImmediate(m_Mesh);
-#else
-                UnityEngine.Object.Destroy(m_Mesh);
-#endif
+                m_Materials.Clear();
             }
-            m_Mesh = new Mesh();
-            m_Mesh.name = "Text Mesh";
-            m_Mesh.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy | HideFlags.NotEditable;
+            for(int i = 0; i < combinedSubMeshCount; ++i)
+            {
+                m_Mesh.SetTriangles(combinedData.SubMeshes[i].Trinagles, i);
+                m_Materials.Add(combinedData.SubMeshes[i].Material);
+            }
 
-
-
-            //TODO:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            GenerateMesh(textAccumulator.ToString());
+            //m_Mesh.RecalculateBounds();
+            //TODO: update data bounds after inserted image adjustment
         }
 
         public void Parse(string i_Text)
         {
-            m_DataList.Clear();
             Setup();
+            m_DataList.Clear();
             var document = new XmlDocument();
             var dataRoot = new IntelligentTextDataNode(0);
             m_DataList.Add(dataRoot);
@@ -305,91 +327,8 @@ namespace Common.Text
 
             ReplaceInsersts(document);
             BuildTextData(xmlRoot, dataRoot);
-            BuildMesh();
-        }
 
-        public void GenerateMesh(string i_Text)
-        {
-            if(m_Mesh != null)
-            {
-                m_Mesh.Clear();
-#if UNITY_EDITOR
-                UnityEngine.Object.DestroyImmediate(m_Mesh);
-#else
-                UnityEngine.Object.Destroy(m_Mesh);
-#endif
-            }
-            m_Mesh = new Mesh();
-            m_Mesh.name = "Text Mesh";
-            m_Mesh.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy | HideFlags.NotEditable;
-
-            m_TextGenerator.Populate(i_Text, TextSettings);
-
-            int vertSize = m_TextGenerator.vertexCount;
-            Vector3[] tempVerts = new Vector3[vertSize];
-            Color32[] tempColours = new Color32[vertSize];
-            Vector2[] tempUvs = new Vector2[vertSize];
-            IList<UIVertex> generatorVerts = m_TextGenerator.verts;
-            for (int i = 0; i < vertSize; ++i)
-            {
-                tempVerts[i] = generatorVerts[i].position;
-                tempColours[i] = generatorVerts[i].color;
-                tempUvs[i] = generatorVerts[i].uv0;
-            }
-            
-            m_Mesh.vertices = tempVerts;
-            m_Mesh.colors32 = tempColours;
-            m_Mesh.uv = tempUvs;
-
-            int dataNodeCount = m_DataList.Count;
-            for (int i = 0; i < dataNodeCount; ++i)
-            {
-                var dataNode = m_DataList[i];
-                switch (dataNode.Type)
-                {
-                    case IntelligentTextDataType.None: break;
-                    case IntelligentTextDataType.Group: break;
-                    case IntelligentTextDataType.Image:
-                        break;
-                    case IntelligentTextDataType.Text:
-                        break;
-                }
-            }
-
-            int characterCount = vertSize / 4;
-            int[] tempIndices = new int[characterCount * 6];
-            for (int i = 0; i < characterCount; ++i)
-            {
-                int vertIndexStart = i * 4;
-                int trianglesIndexStart = i * 6;
-                tempIndices[trianglesIndexStart++] = vertIndexStart;
-                tempIndices[trianglesIndexStart++] = vertIndexStart + 1;
-                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
-                tempIndices[trianglesIndexStart++] = vertIndexStart;
-                tempIndices[trianglesIndexStart++] = vertIndexStart + 2;
-                tempIndices[trianglesIndexStart] = vertIndexStart + 3;
-            }
-            o_Mesh.triangles = tempIndices;
-            //TODO: setBounds manually
-            o_Mesh.RecalculateBounds();
-        }
-
-        private int[] GenerateTriangles(IntelligentTextDataImageNode i_Data)
-        {
-            int characterCount = i_Data.TextEndIndex - i_Data.TextStartIndex;
-            int[] result = new int[characterCount * 6];
-            for (int i = 0; i < characterCount; ++i)
-            {
-                int vertIndexStart = (i_Data.TextStartIndex + i) * 4;
-                int trianglesIndexStart = (i_Data.TextStartIndex + i) * 6;
-                result[trianglesIndexStart++] = vertIndexStart;
-                result[trianglesIndexStart++] = vertIndexStart + 1;
-                result[trianglesIndexStart++] = vertIndexStart + 2;
-                result[trianglesIndexStart++] = vertIndexStart;
-                result[trianglesIndexStart++] = vertIndexStart + 2;
-                result[trianglesIndexStart] = vertIndexStart + 3;
-            }
-            return result;
+            RebuildMesh();
         }
 
         public void Dispose()
