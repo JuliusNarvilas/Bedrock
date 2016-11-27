@@ -85,8 +85,7 @@ namespace Common.Properties.Numerical
         protected void UpdateExhaustableModifiedValue()
         {
             //clamp depletion to be greater or equal to 0
-            int zeroCompareDepletion = m_DataZero.CompareTo(m_Depletion);
-            if(zeroCompareDepletion > 0)
+            if(m_DataZero.CompareTo(m_Depletion) > 0)
             {
                 m_Depletion = m_DataZero.Get();
             }
@@ -94,12 +93,10 @@ namespace Common.Properties.Numerical
             m_DataZero.Set(m_BaseValue);
             m_DataZero.Add(m_FinalModifier);
             //clamp depletion to end at max
-            int maxCompareDepleation = m_DataZero.CompareTo(m_Depletion);
-            if(maxCompareDepleation < 0)
+            if(m_DataZero.CompareTo(m_Depletion) < 0)
             {
                 //clamp depletion to 0 if max is negative
-                int maxCompareZero = m_DataZero.CompareTo(zero);
-                m_Depletion = (maxCompareZero <= 0) ? zero : m_DataZero.Get();
+                m_Depletion = (m_DataZero.CompareTo(zero) <= 0) ? zero : m_DataZero.Get();
             }
             m_DataZero.Substract(m_Depletion);
             m_Value = m_DataZero.Get();
@@ -126,12 +123,18 @@ namespace Common.Properties.Numerical
                     i_ChangeTypeMask |= ENumericalPropertyChangeType.NestedUpdate;
                 }
 
+                m_DataZero.Set(GetMax());
+                m_DataZero.Substract(m_Value);
+                TNumerical oldDepletion = m_DataZero.Get();
+                m_DataZero.ToZero();
+
                 NumericalPropertyChangeEventStruct<TNumerical, TContext, TModifierReader> eventData =
                     new NumericalPropertyChangeEventStruct<TNumerical, TContext, TModifierReader>(
                         this,
-                        i_ChangeTypeMask,
+                        i_ChangeTypeMask,    
+                        oldDepletion,
                         i_Context
-                        );
+                    );
 
                 UpdateModifiers(ref eventData);
                 m_Depletion = eventData.NewDepletion;

@@ -32,6 +32,8 @@ namespace Common.Text
         protected TextAnchor m_Anchor = TextAnchor.MiddleCenter;
         [SerializeField]
         protected VerticalWrapMode m_VerticalOverflow = VerticalWrapMode.Truncate;
+        [SerializeField]
+        protected bool m_DecodeHTML = false;
 
 
         public string Style
@@ -169,6 +171,7 @@ namespace Common.Text
                 m_Parser.TextSettings.verticalOverflow = m_VerticalOverflow;
 
                 m_Parser.Rectangle = transform.rect;
+                m_Parser.DecodeHTML = m_DecodeHTML;
 
                 RebuildText();
             }

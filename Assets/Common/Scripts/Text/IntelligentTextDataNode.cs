@@ -1,14 +1,7 @@
-﻿//Allowes to use text that is escaped as HTML text
-//#define INTELLIGENT_TEXT_DECODE_HTML
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-
-#if INTELLIGENT_TEXT_DECODE_HTML
-using RestSharp.Contrib;
-#endif
 
 namespace Common.Text
 {
@@ -83,11 +76,7 @@ namespace Common.Text
         public IntelligentTextDataTextNode(int i_Id, string i_InteractorId, string i_Text) :
             base(i_Id, i_InteractorId, IntelligentTextDataType.Text, null)
         {
-#if INTELLIGENT_TEXT_DECODE_HTML
-            Text = HttpUtility.HtmlDecode(i_Text);
-#else
             Text = i_Text;
-#endif
         }
 
         public override bool Merge(IntelligentTextDataNode i_Node)
@@ -171,6 +160,7 @@ namespace Common.Text
             throw new NotImplementedException();
         }
 
+        //TODO:
         public override int BuildSubMesh(int i_StartVertsIndex, List<IntelligentTextMeshData> i_MeshSets, ref IntelligentTextParser i_Parser)
         {
             var meshData = i_MeshSets[0];

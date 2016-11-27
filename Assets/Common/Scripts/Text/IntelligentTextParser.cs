@@ -4,44 +4,148 @@ using System.Text;
 using System.Xml;
 using UnityEngine;
 using Common.Collections;
+using RestSharp.Contrib;
 
 namespace Common.Text
 {
+    /// <summary>
+    /// A collection of functionality for controlling the process of converting Intelligent Text to a Mesh.
+    /// </summary>
+    /// <seealso cref="System.IDisposable" />
     public struct IntelligentTextParser : IDisposable
     {
+        /// <summary>
+        /// Name of the root xml element.
+        /// </summary>
         private static readonly string ROOT_TAG = "root";
+        /// <summary>
+        /// The replacement space placeholder size during the measuring test.
+        /// </summary>
+        private const float SPACE_PLACEHOLDER_MEASURE_SIZE = 100;
 
+        /// <summary>
+        /// The Intelligent Text insert tag for making data insertion early in the parsing process.
+        /// </summary>
         public static readonly string INSERT_TAG = "insert";
+        /// <summary>
+        /// Tag of elements that hold data from insertion.
+        /// </summary>
         public static readonly string INSERT_DONE_TAG = "_insert";
+        /// <summary>
+        /// The Intelligent Text group tag for grouping multiple Intelligent Text elements.
+        /// </summary>
         public static readonly string GROUP_TAG = "group";
+        /// <summary>
+        /// The Intelligent Text image tag for inserting an image in the text.
+        /// </summary>
         public static readonly string IMAGE_TAG = "image";
 
+        /// <summary>
+        /// The Intelligent Text element interactor identifier attribute.
+        /// </summary>
         public static readonly string INTERACTOR_ID_ATTRIBUTE = "interactorId";
+        /// <summary>
+        /// The Intelligent Text element identifier attribute.
+        /// </summary>
         public static readonly string ID_ATTRIBUTE = "id";
+        /// <summary>
+        /// The Intelligent Text image transform identifier attribute.
+        /// </summary>
         public static readonly string TRANSFORM_ID_ATTRIBUTE = "transformId";
-        
-        private const float SPACE_PLACEHOLDER_MEASURE_SIZE = 100;
+        /// <summary>
+        /// The replacement space placeholder string.
+        /// </summary>
         public static readonly string SPACE_PLACEHOLDER_STR = "|";
-        
+
+        /// <summary>
+        /// The list of all Intelligent Text data nodes.
+        /// </summary>
         private List<IntelligentTextDataNode> m_DataList;
+        /// <summary>
+        /// The text generator.
+        /// </summary>
         private TextGenerator m_TextGenerator;
+        /// <summary>
+        /// The replacement space placeholder size per unit from the measuring test.
+        /// </summary>
         private Vector2 m_SpacePlaceholderSizePerUnit;
+        /// <summary>
+        /// The replacement space placeholder size from the generated text.
+        /// </summary>
         private Vector2 m_SpacePlaceholderSize;
+        /// <summary>
+        /// The Intelligent Text mesh.
+        /// </summary>
         private Mesh m_Mesh;
+        /// <summary>
+        /// The Intelligent Text mesh materials.
+        /// </summary>
         private List<Material> m_Materials;
-
+        
+        /// <summary>
+        /// The text settings for text generator.
+        /// </summary>
         public TextGenerationSettings TextSettings;
+        /// <summary>
+        /// The text generation extents rectangle.
+        /// </summary>
         public Rect Rectangle;
+        /// <summary>
+        /// Controlling the decoding of HTML text.
+        /// </summary>
+        public bool DecodeHTML;
 
+        /// <summary>
+        /// Gets the replacement space placeholder size per unit.
+        /// </summary>
+        /// <value>
+        /// The space placeholder size per unit.
+        /// </value>
         public Vector2 SpacePlaceholderSizePerUnit { get { return m_SpacePlaceholderSizePerUnit; } }
+        /// <summary>
+        /// Gets the estimated size of the replacement space placeholder.
+        /// </summary>
+        /// <value>
+        /// The estimated size of the space placeholder.
+        /// </value>
         public Vector2 SpacePlaceholderEstimatedSize { get { return m_SpacePlaceholderSizePerUnit * TextSettings.fontSize; } }
+        /// <summary>
+        /// Gets the current size of the replacement space placeholder.
+        /// </summary>
+        /// <value>
+        /// The size of the space placeholder.
+        /// </value>
         public Vector2 SpacePlaceholderSize { get { return m_SpacePlaceholderSize; } }
+        /// <summary>
+        /// Gets the root of Intelligent Text data nodes.
+        /// </summary>
+        /// <value>
+        /// The Intelligent Text data node root.
+        /// </value>
         public IntelligentTextDataNode DataRoot { get { return m_DataList[0]; } }
+        /// <summary>
+        /// Gets the mesh.
+        /// </summary>
+        /// <value>
+        /// The mesh.
+        /// </value>
         public Mesh Mesh { get { return m_Mesh; } }
+        /// <summary>
+        /// Gets the materials.
+        /// </summary>
+        /// <value>
+        /// The materials.
+        /// </value>
         public List<Material> Materials { get { return m_Materials; } }
 
+
+        /// <summary>
+        /// Replaces the Intelligent Text insersts.
+        /// </summary>
+        /// <param name="i_Document">The text xml document.</param>
         private void ReplaceInsersts(XmlDocument i_Document)
         {
+            const int maxRecursionCount = 5;
             int recursionCount = 0;
             XmlNodeList elementList = null;
             do
@@ -68,19 +172,14 @@ namespace Common.Text
                     }
                 }
             }
-            while (elementList.Count > 0 && recursionCount < 5);
+            while (elementList.Count > 0 && recursionCount < maxRecursionCount);
         }
 
-        private void ConstructIntelligentTextElements()
-        {
-
-        }
-
-        private void AddDataNode()
-        {
-
-        }
-
+        /// <summary>
+        /// Builds the Intelligent Text data nodes.
+        /// </summary>
+        /// <param name="i_XmlContainer">The i XML container.</param>
+        /// <param name="i_Parent">The i parent.</param>
         public void BuildTextData(XmlNode i_XmlContainer, IntelligentTextDataNode i_Parent)
         {
             foreach (XmlNode node in i_XmlContainer)
@@ -92,7 +191,7 @@ namespace Common.Text
                             IntelligentTextDataNode data = new IntelligentTextDataTextNode(
                                 m_DataList.Count,
                                 null,
-                                node.InnerText
+                                DecodeHTML ? HttpUtility.HtmlDecode(node.InnerText) : node.InnerText
                             );
 
                             int lastSiblingIndex = i_Parent.Children.Count - 1;
@@ -151,6 +250,9 @@ namespace Common.Text
             }
         }
 
+        /// <summary>
+        /// Setups this instance.
+        /// </summary>
         private void Setup()
         {
             if (m_TextGenerator == null)
@@ -185,6 +287,9 @@ namespace Common.Text
             m_SpacePlaceholderSizePerUnit = m_TextGenerator.rectExtents.size / SPACE_PLACEHOLDER_MEASURE_SIZE;
         }
 
+        /// <summary>
+        /// Rebuilds the INtelligent Text mesh.
+        /// </summary>
         public void RebuildMesh()
         {
             if (m_Mesh != null)
@@ -200,17 +305,19 @@ namespace Common.Text
             m_Mesh.name = "Text Mesh";
             m_Mesh.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy | HideFlags.NotEditable;
 
-
+            //build up the final text
             StringBuilder textAccumulator = new StringBuilder();
             int textDataSize = m_DataList.Count;
             for (int i = 0; i < textDataSize; ++i)
             {
                 m_DataList[i].BuildText(textAccumulator, ref this);
             }
+            //append the space placeholder to find out its size in current text
             textAccumulator.Append(SPACE_PLACEHOLDER_STR);
             string finalText = textAccumulator.ToString();
             m_TextGenerator.Populate(finalText, TextSettings);
 
+            //calculate the space placeholder size in current text
             var generatedChars = m_TextGenerator.characters;
             float generatedSpacePlaceholderWidth = 0;
             for(int i = SPACE_PLACEHOLDER_STR.Length; i > 0; --i)
@@ -220,7 +327,7 @@ namespace Common.Text
             }
             m_SpacePlaceholderSize = m_SpacePlaceholderSizePerUnit * (generatedSpacePlaceholderWidth / m_SpacePlaceholderSizePerUnit.x);
 
-
+            //create line data for calculating mesh adjustments for added elements like images
             var generatedLines = m_TextGenerator.lines;
             int lineCount = generatedLines.Count;
             IList<UIVertex> generatorVerts = m_TextGenerator.verts;
@@ -257,15 +364,16 @@ namespace Common.Text
             }
             List<IntelligentTextMeshData> meshDataList = new List<IntelligentTextMeshData>() { initialMeshData };
 
-
+            //building final mesh data, applying mesh adjustments from Intelligent Text data nodes
             int currentVertexIndex = 0;
             for (int i = 0; i < textDataSize; ++i)
             {
                 currentVertexIndex = m_DataList[i].BuildSubMesh(currentVertexIndex, meshDataList, ref this);
             }
-
+            //sorting the rendered elements if they require to appear in a specific order
             meshDataList.InsertionSort(IntelligentTextMeshData.Sorter.Ascending);
 
+            //combining seperate mesh data
             var combinedData = meshDataList[0];
             for (int i = 1; i < meshDataList.Count; ++i)
             {
@@ -313,6 +421,10 @@ namespace Common.Text
             //TODO: update data bounds after inserted image adjustment
         }
 
+        /// <summary>
+        /// Parses the specified Intelligent Text string.
+        /// </summary>
+        /// <param name="i_Text">The Intelligent Text string.</param>
         public void Parse(string i_Text)
         {
             Setup();
@@ -331,12 +443,19 @@ namespace Common.Text
             RebuildMesh();
         }
 
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
         public void Dispose()
         {
             if (m_Mesh != null)
             {
                 m_Mesh.Clear();
+#if UNITY_EDITOR
+                UnityEngine.Object.DestroyImmediate(m_Mesh);
+#else
                 UnityEngine.Object.Destroy(m_Mesh);
+#endif
             }
             m_Mesh = null;
             using (m_TextGenerator)

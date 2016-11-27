@@ -35,12 +35,18 @@ namespace Common.Properties.Numerical
                     i_ChangeTypeMask |= ENumericalPropertyChangeType.NestedUpdate;
                 }
 
+                m_DataZero.Set(GetMax());
+                m_DataZero.Substract(m_Value);
+                TNumerical oldDepletion = m_DataZero.Get();
+                m_DataZero.ToZero();
+
                 NumericalPropertyChangeEventStruct<TNumerical, TContext, TModifierReader> eventData =
                     new NumericalPropertyChangeEventStruct<TNumerical, TContext, TModifierReader>(
                         this,
                         i_ChangeTypeMask,
+                        oldDepletion,
                         i_Context
-                        );
+                    );
                 UpdateModifiers(ref eventData);
                 m_Depletion = eventData.NewDepletion;
                 UpdateExhaustableModifiedValue();

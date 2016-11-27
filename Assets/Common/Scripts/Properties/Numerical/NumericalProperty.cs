@@ -40,14 +40,18 @@ namespace Common.Properties.Numerical
         /// </summary>
         ForceUpdate =   1 << 5,
         /// <summary>
-        /// Flag for indicating that property changes were made during the previous update process.
+        /// Flag for indicating that property changes for this update process were made inside another update process.
         /// </summary>
+        /// <remarks>
+        /// It's recommended to always check and avoid nested updates unless required.
+        /// Unintended nested updates can result to an infinite recursion and a stack overflow.
+        /// </remarks>
         NestedUpdate =  1 << 6,
 
         /// <summary>
         /// Mask containing flags for any type of modifier change.
         /// </summary>
-        Modifier =      ModifierAdd | ModifierRemove
+        ModifierChange = ModifierAdd | ModifierRemove
     }
 
     /// <summary>
@@ -119,23 +123,36 @@ namespace Common.Properties.Numerical
             NumericalProperty = i_Property;
             EChangeTypeMask = i_ChangeTypeMask;
             OldModifier = i_Property.GetFinalModifier();
-            //depletion is set immediately, so the old value needs to be recalculated
-            ExhaustibleNumericalProperty<TNumerical, TContext, TModifierReader> exhaustible = i_Property as ExhaustibleNumericalProperty<TNumerical, TContext, TModifierReader>;
-            if (exhaustible != null)
-            {
-                INumericalPropertyData<TNumerical> tempData = exhaustible.CreateZeroData();
-                tempData.Set(exhaustible.GetMax());
-                tempData.Substract(exhaustible.Get());
-                OldDepletion = tempData.Get();
-                NewDepletion = exhaustible.GetDepletion();
-            }
-            else
-            {
-                OldDepletion = default(TNumerical);
-                NewDepletion = default(TNumerical);
-            }
-            NewModifier = default(TNumerical);
+            OldDepletion = default(TNumerical);
             Context = i_Context;
+            NewModifier = default(TNumerical);
+            NewDepletion = default(TNumerical);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the numerical property change event data struct.
+        /// </summary>
+        /// <remarks>
+        /// This struct can be created on the stack and treated as a primitive type when passing to a function, so memory handling needs to be considered.
+        /// </remarks>
+        /// <param name="i_Property">The changed numerical property.</param>
+        /// <param name="i_ChangeTypeMask">Mask of change types that have occurred.</param>
+        /// <param name="i_OldDepletion">The numerical value of previous depletion amount.</param>
+        /// <param name="i_Context">Context of the change event.</param>
+        public NumericalPropertyChangeEventStruct(
+            ExhaustibleNumericalProperty<TNumerical, TContext, TModifierReader> i_Property,
+            ENumericalPropertyChangeType i_ChangeTypeMask,
+            TNumerical i_OldDepletion,
+            TContext i_Context = default(TContext)
+        )
+        {
+            NumericalProperty = i_Property;
+            EChangeTypeMask = i_ChangeTypeMask;
+            OldModifier = i_Property.GetFinalModifier();
+            OldDepletion = i_OldDepletion;
+            Context = i_Context;
+            NewModifier = default(TNumerical);
+            NewDepletion = i_Property.GetDepletion();
         }
     }
 
