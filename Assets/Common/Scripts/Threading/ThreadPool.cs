@@ -1,123 +1,56 @@
 ﻿using Common.Collections;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 
 namespace Common.Threading
 {
-    public enum ThreadPoolTaskPriority
+    public enum ThreadedTaskState
     {
-        VeryHigh,
-        High,
-        Medium,
-        Low
+        InProgress,
+        Aborted,
+        Succeeded,
+        Errored
     }
 
+    /// <summary>
+    /// Simple implementation of Thread Pool functionality.
+    /// </summary>
+    /// <seealso cref="System.IDisposable" />
     public class ThreadPool : IDisposable
     {
-        private class ThreadPoolJobTask
-        {
-            public object Result = null;
-            public ThreadedJobState State = ThreadedJobState.InProgress;
-            public Exception Exception = null;
-            public readonly Func<object> RunFunc = null;
-            public readonly TimeSpan MaxRunTime;
-            public readonly DateTime ExpectedRunTimestamp;
-            public DateTime RunTimestamp = DateTime.MaxValue;
-
-            public ThreadPoolJobTask(Func<object> i_RunFunc, ThreadPoolTaskPriority i_Priority = ThreadPoolTaskPriority.Medium)
-            {
-                RunFunc = i_RunFunc;
-                MaxRunTime = new TimeSpan(0, 0, 5, 0);
-                switch(i_Priority)
-                {
-                    case ThreadPoolTaskPriority.VeryHigh:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddMilliseconds(500);
-                        break;
-                    case ThreadPoolTaskPriority.High:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddSeconds(1);
-                        break;
-                    case ThreadPoolTaskPriority.Medium:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddSeconds(2);
-                        break;
-                    case ThreadPoolTaskPriority.Low:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddSeconds(3);
-                        break;
-                }
-            }
-            public ThreadPoolJobTask(Func<object> i_RunFunc, TimeSpan i_MaxRunTime, ThreadPoolTaskPriority i_Priority = ThreadPoolTaskPriority.Medium)
-            {
-                RunFunc = i_RunFunc;
-                MaxRunTime = i_MaxRunTime;
-                switch (i_Priority)
-                {
-                    case ThreadPoolTaskPriority.VeryHigh:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddMilliseconds(500);
-                        break;
-                    case ThreadPoolTaskPriority.High:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddSeconds(1);
-                        break;
-                    case ThreadPoolTaskPriority.Medium:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddSeconds(2);
-                        break;
-                    case ThreadPoolTaskPriority.Low:
-                        ExpectedRunTimestamp = DateTime.UtcNow.AddSeconds(3);
-                        break;
-                }
-            }
-        }
-
-        private class ThreadPoolJobTaskDescendingComparer : IComparer<ThreadPoolJobTask>
-        {
-            private ThreadPoolJobTaskDescendingComparer()
-            { }
-
-            public int Compare(ThreadPoolJobTask i_A, ThreadPoolJobTask i_B)
-            {
-                return i_A.ExpectedRunTimestamp.CompareTo(i_B.ExpectedRunTimestamp) * -1;
-            }
-
-            public static ThreadPoolJobTaskDescendingComparer Innstance = new ThreadPoolJobTaskDescendingComparer();
-        }
-
-        private class ThreadPoolResult<TResult> : IThreadPoolResult<TResult>
-        {
-            private readonly ThreadPoolJobTask m_JobLink;
-
-            public ThreadPoolResult(ThreadPoolJobTask i_JobLink)
-            {
-                m_JobLink = i_JobLink;
-            }
-
-            public ThreadedJobState State
-            {
-                get { return m_JobLink.State; }
-            }
-
-            public Exception GetException()
-            {
-                return m_JobLink.Exception;
-            }
-
-            public TResult GetResult()
-            {
-                while (m_JobLink.State == ThreadedJobState.InProgress)
-                {
-                    Thread.Sleep(10);
-                }
-                return (TResult)m_JobLink.Result;
-            }
-        }
-
+        /// <summary>
+        /// A <see cref="ThreadPool"/> worker thread managing class.
+        /// </summary>
         private class ThreadPoolJob
         {
+            /// <summary>
+            /// The thread task change lock handle
+            /// </summary>
             public readonly object ThreadTaskChangeHandle = new object();
+            /// <summary>
+            /// The current task.
+            /// </summary>
             private ThreadPoolJobTask m_Task = null;
+            /// <summary>
+            /// The assigned thread pool for task acquisition.
+            /// </summary>
             private readonly ThreadPool m_ThreadPool;
+            /// <summary>
+            /// Thread closing condition.
+            /// </summary>
             private bool m_Active = true;
+            /// <summary>
+            /// The worker thread.
+            /// </summary>
             private readonly Thread m_Thread;
 
+            /// <summary>
+            /// Gets the current task.
+            /// </summary>
+            /// <value>
+            /// The <see cref="ThreadPool"/> task.
+            /// </value>
             public ThreadPoolJobTask Task
             {
                 get { return m_Task; }
@@ -129,6 +62,8 @@ namespace Common.Threading
                 m_ThreadPool = i_ThreadPool;
 
                 m_Thread = new Thread(Run);
+                m_Thread.Name = "Thread Pool worker";
+                m_Thread.Priority = ThreadPriority.Normal;
                 m_Thread.Start();
             }
 
@@ -150,7 +85,7 @@ namespace Common.Threading
                     m_Thread.Abort();
                     if (m_Task != null)
                     {
-                        m_Task.State = ThreadedJobState.Aborted;
+                        m_Task.State = ThreadedTaskState.Aborted;
                     }
                 }
                 catch
@@ -160,10 +95,14 @@ namespace Common.Threading
                 m_Task = null;
             }
 
+            /// <summary>
+            /// Worker thread execution function.
+            /// </summary>
             private void Run()
             {
                 while (m_Active)
                 {
+                    //finding new tasks
                     if (m_ThreadPool.m_Tasks.Count > 0)
                     {
                         lock (m_ThreadPool.m_ThreadPoolTaskListChangeHandle)
@@ -183,14 +122,14 @@ namespace Common.Threading
                     {
                         try
                         {
-                            m_Task.RunTimestamp = DateTime.UtcNow;
-                            m_Task.Result = m_Task.RunFunc();
-                            m_Task.State = ThreadedJobState.Succeeded;
+                            m_Task.RunStartTimestamp = DateTime.UtcNow;
+                            m_Task.RunFunc();
+                            m_Task.State = ThreadedTaskState.Succeeded;
                         }
                         catch (Exception e)
                         {
                             m_Task.Exception = e;
-                            m_Task.State = ThreadedJobState.Errored;
+                            m_Task.State = ThreadedTaskState.Errored;
                         }
                         finally
                         {
@@ -208,12 +147,34 @@ namespace Common.Threading
             }
         }
 
+        /// <summary>
+        /// The thread pool task list change lock handle.
+        /// </summary>
         private readonly object m_ThreadPoolTaskListChangeHandle = new object();
+        /// <summary>
+        /// The seperate thread for running the Thread Pool Manager.
+        /// </summary>
         private readonly Thread m_ManagerThread;
+        /// <summary>
+        /// The tasks to be processed.
+        /// </summary>
         private readonly List<ThreadPoolJobTask> m_Tasks = new List<ThreadPoolJobTask>(5);
+        /// <summary>
+        /// The list of active workers.
+        /// </summary>
         private readonly List<ThreadPoolJob> m_ActiveThreadList = new List<ThreadPoolJob>();
+        /// <summary>
+        /// The list of closing workers.
+        /// </summary>
         private readonly List<ThreadPoolJob> m_ClosingThreadList = new List<ThreadPoolJob>();
+        /// <summary>
+        /// The thread pool termination condition.
+        /// </summary>
         private bool m_Active = true;
+
+        private static ThreadPool m_Instance = new ThreadPool();
+
+        public static ThreadPool Instance { get { return m_Instance; } }
 
         public ThreadPool()
         {
@@ -223,28 +184,50 @@ namespace Common.Threading
             m_ActiveThreadList.Add(new ThreadPoolJob(this));
         }
 
-        public IThreadPoolResult<TResult> AddJob<TResult>(Func<TResult> i_Job)
+        public int PendingTaskCount
         {
-            Func<object> castedFunc = () => { return i_Job(); };
-            ThreadPoolJobTask task = new ThreadPoolJobTask(castedFunc);
+            get { return m_Tasks.Count; }
+        }
+
+        public ThreadPoolTaskHandle AddTask(Action i_Action)
+        {
+            ThreadPoolJobTask task = new ThreadPoolJobTask(i_Action);
             lock (m_ThreadPoolTaskListChangeHandle)
             {
                 m_Tasks.Add(task);
-                m_Tasks.InsertionSort(ThreadPoolJobTaskDescendingComparer.Innstance);
+                m_Tasks.InsertionSort(ThreadPoolJobTask.TerminationComparer.Descending);
             }
-            return new ThreadPoolResult<TResult>(task);
+            return new ThreadPoolTaskHandle(task);
         }
 
+        public ThreadPoolTaskResult<TResult> AddTask<TResult>(Func<TResult> i_Func)
+        {
+            ThreadPoolJobTask newTask;
+            var result = ThreadPoolTaskResult<TResult>.Create(i_Func, out newTask);
+            lock (m_ThreadPoolTaskListChangeHandle)
+            {
+                m_Tasks.Add(newTask);
+                m_Tasks.InsertionSort(ThreadPoolJobTask.TerminationComparer.Descending);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Thread pool manager execution function.
+        /// </summary>
         private void ManagerRun()
         {
             while(m_Active)
             {
-                int newThreadCount = GetNewThreadCount();
+                int newThreadCount = GetEstimatedThreadCount();
                 int requiredExtraJobs = MaintainActiveThreadList(newThreadCount);
                 for (int i = 0; i < requiredExtraJobs; ++i)
                 {
                     m_ActiveThreadList.Add(new ThreadPoolJob(this));
                 }
+
+                Log.DebugLogIf(requiredExtraJobs > 0, "ThreadPool is adding {0} thread workers.", requiredExtraJobs);
+                
                 MaintainClosingThreadList();
                 
                 Thread.Sleep(200);
@@ -271,7 +254,7 @@ namespace Common.Threading
         /// Gets the ideal estimated thread count for pending tasks.
         /// </summary>
         /// <returns></returns>
-        private int GetNewThreadCount()
+        private int GetEstimatedThreadCount()
         {
             int lateTaskCount = 0;
             lock (m_ThreadPoolTaskListChangeHandle)
@@ -295,9 +278,14 @@ namespace Common.Threading
             return lateTaskCount <= 0 ? 1 : lateTaskCount;
         }
 
-        private int MaintainActiveThreadList(int i_RequiredReadyJobs)
+        /// <summary>
+        /// Maintains the active thread list by closing unwanted active workers.
+        /// </summary>
+        /// <param name="i_RequiredJobCount">The required number of jobs.</param>
+        /// <returns>The number of required new workers.</returns>
+        private int MaintainActiveThreadList(int i_RequiredJobCount)
         {
-            int ExtraThreadCount = i_RequiredReadyJobs;
+            int ExtraThreadCount = i_RequiredJobCount;
             DateTime now = DateTime.UtcNow;
             for(int i = m_ActiveThreadList.Count - 1; i >= 0; --i)
             {
@@ -317,7 +305,7 @@ namespace Common.Threading
                             m_ClosingThreadList.Add(threadJob);
                         }
                     }
-                    else if((threadJob.Task.RunTimestamp + threadJob.Task.MaxRunTime - now).TotalMilliseconds > 0)
+                    else if((threadJob.Task.RunStartTimestamp + threadJob.Task.MaxRunTime - now).TotalMilliseconds > 0)
                     {
                         threadJob.Abort();
                         m_ActiveThreadList.RemoveAt(i);
@@ -327,8 +315,13 @@ namespace Common.Threading
             return ExtraThreadCount;
         }
 
+        /// <summary>
+        /// Maintains the closing thread list by tracking unfinished execution and aborting threads past the maximum execution time threshold.
+        /// </summary>
         private void MaintainClosingThreadList()
         {
+            int closingCount = 0;
+            int abortingCount = 0;
             DateTime now = DateTime.UtcNow;
             for (int i = m_ClosingThreadList.Count - 1; i >= 0; --i)
             {
@@ -336,13 +329,17 @@ namespace Common.Threading
                 if (threadJob.Task == null)
                 {
                     m_ClosingThreadList.RemoveAt(i);
+                    ++closingCount;
                 }
-                else if ((threadJob.Task.RunTimestamp + threadJob.Task.MaxRunTime - now).TotalMilliseconds > 0)
+                else if ((threadJob.Task.RunStartTimestamp + threadJob.Task.MaxRunTime - now).TotalMilliseconds > 0)
                 {
                     threadJob.Abort();
                     m_ClosingThreadList.RemoveAt(i);
+                    ++abortingCount;
                 }
             }
+            Log.DebugLogIf(closingCount > 0, "ThreadPool is closing {0} thread workers.", closingCount);
+            Log.DebugLogIf(abortingCount > 0, "ThreadPool is aborting {0} thread workers.", abortingCount);
         }
 
         public void Dispose()
