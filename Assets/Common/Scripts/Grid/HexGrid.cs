@@ -9,7 +9,7 @@ namespace Assets.Common.Scripts.Grid
 {
     public class HexGrid<TGridTileData, TTerrainData> : Grid2D<TGridTileData, TTerrainData> where TTerrainData : ISerializable
     {
-        public override ushort GetHeuristicDistance(Grid2DPosition i_From, Grid2DPosition i_To)
+        public override int GetHeuristicDistance(Grid2DPosition i_From, Grid2DPosition i_To)
         {
             throw new NotImplementedException();
         }

@@ -9,7 +9,7 @@ namespace Common.Grid
         protected readonly List<List<GridElement>> m_Tiles = new List<List<GridElement>>();
         protected bool m_AllowMoveDiagonally = true;
 
-        public override ushort GetHeuristicDistance(Grid2DPosition i_From, Grid2DPosition i_To)
+        public override int GetHeuristicDistance(Grid2DPosition i_From, Grid2DPosition i_To)
         {
             int xDiff = Math.Abs(i_To.X - i_From.X);
             int yDiff = Math.Abs(i_To.Y - i_From.Y);
@@ -18,11 +18,11 @@ namespace Common.Grid
             {
                 int minDiff = Math.Min(xDiff, yDiff);
                 int diagonalDist = (int)(Math.Sqrt(minDiff * minDiff * 2) + 0.5);
-                return (ushort)(diagonalDist + xDiff - minDiff + yDiff - minDiff);
+                return diagonalDist + xDiff - minDiff + yDiff - minDiff;
             }
             else
             {
-                return (ushort)(xDiff + yDiff);
+                return xDiff + yDiff;
             }
         }
 

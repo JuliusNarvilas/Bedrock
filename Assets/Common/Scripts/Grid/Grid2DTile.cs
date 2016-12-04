@@ -1,26 +1,26 @@
 ﻿
-using Common.Grid.TerrainType;
-using System;
-using System.Runtime.Serialization;
-
 namespace Common.Grid
 {
-    public class Grid2DTile<TGridTileData, TTerrainData> where TTerrainData : ISerializable
+    public class Grid2DTile<TTerrainData, TContext>
+        where TTerrainData : GridTerrain<TContext>
     {
-        public readonly int TerrainType;
         public readonly Grid2DPosition Position;
-        public readonly TGridTileData Data;
+        public readonly TTerrainData Terrain;
 
-        public Grid2DTile(int i_TerrainType, Grid2DPosition i_Position, TGridTileData i_Data)
+        public Grid2DTile(Grid2DPosition i_Position, TTerrainData i_Terrain)
         {
-            TerrainType = i_TerrainType;
             Position = i_Position;
-            Data = i_Data;
+            Terrain = i_Terrain;
         }
 
-        public virtual int GetCost(Grid2DTile<TGridTileData, TTerrainData> i_FromTile, TerrainTypeData<TTerrainData> i_TerrainTypeData)
+        public virtual float GetTransitionInCost(Grid2DTile<TTerrainData, TContext> i_FromTile, TContext i_Context)
         {
-            return i_TerrainTypeData.Cost;
+            return Terrain.GetCost(i_Context);
+        }
+
+        public virtual float GetTransitionOutCost(Grid2DTile<TTerrainData, TContext> i_ToTile, TContext i_Context)
+        {
+            return 0.0f;
         }
 
         public virtual void Reset()
@@ -29,10 +29,9 @@ namespace Common.Grid
         public override string ToString()
         {
             return string.Format(
-                "{ Position: {1} {0} Data: {2} {0}}",
-                Environment.NewLine,
+                "{ Position: {0} ; Terrain: {1} }",
                 Position.ToString(),
-                Data.ToString()
+                Terrain.ToString()
                 );
         }
     }
