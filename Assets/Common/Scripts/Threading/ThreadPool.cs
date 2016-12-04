@@ -123,7 +123,7 @@ namespace Common.Threading
                         try
                         {
                             m_Task.RunStartTimestamp = DateTime.UtcNow;
-                            m_Task.RunFunc();
+                            m_Task.RunFunc.Invoke();
                             m_Task.State = ThreadedTaskState.Succeeded;
                         }
                         catch (Exception e)
@@ -191,7 +191,12 @@ namespace Common.Threading
 
         public ThreadPoolTaskHandle AddTask(Action i_Action)
         {
-            ThreadPoolJobTask task = new ThreadPoolJobTask(i_Action);
+            return AddTask(i_Action, new TimeSpan(0, 5, 0));
+        }
+
+        public ThreadPoolTaskHandle AddTask(Action i_Action, TimeSpan i_MaxRuntime, ThreadPriority i_Priority = ThreadPriority.Normal)
+        {
+            ThreadPoolJobTask task = new ThreadPoolJobTask(i_Action, i_MaxRuntime, i_Priority);
             lock (m_ThreadPoolTaskListChangeHandle)
             {
                 m_Tasks.Add(task);
@@ -202,8 +207,13 @@ namespace Common.Threading
 
         public ThreadPoolTaskResult<TResult> AddTask<TResult>(Func<TResult> i_Func)
         {
+            return AddTask(i_Func, new TimeSpan(0, 5, 0));
+        }
+
+        public ThreadPoolTaskResult<TResult> AddTask<TResult>(Func<TResult> i_Func, TimeSpan i_MaxRuntime, ThreadPriority i_Priority = ThreadPriority.Normal)
+        {
             ThreadPoolJobTask newTask;
-            var result = ThreadPoolTaskResult<TResult>.Create(i_Func, out newTask);
+            var result = ThreadPoolTaskResult<TResult>.Create(i_Func, i_MaxRuntime, i_Priority, out newTask);
             lock (m_ThreadPoolTaskListChangeHandle)
             {
                 m_Tasks.Add(newTask);
@@ -267,7 +277,7 @@ namespace Common.Threading
                     task = m_ClosingThreadList[i].Task;
                     if (task != null)
                     {
-                        if ((task.ExpectedRunTimestamp - now).TotalMilliseconds > 0)
+                        if ((task.ExpectedEndTimestamp - now).TotalMilliseconds > 0)
                         {
                             ++lateTaskCount;
                         }
@@ -339,7 +349,7 @@ namespace Common.Threading
                 }
             }
             Log.DebugLogIf(closingCount > 0, "ThreadPool is closing {0} thread workers.", closingCount);
-            Log.DebugLogIf(abortingCount > 0, "ThreadPool is aborting {0} thread workers.", abortingCount);
+            Log.DebugLogErrorIf(abortingCount > 0, "ThreadPool is aborting {0} thread workers.", abortingCount);
         }
 
         public void Dispose()

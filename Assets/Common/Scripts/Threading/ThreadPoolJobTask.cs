@@ -9,24 +9,42 @@ namespace Common.Threading
     /// </summary>
     public class ThreadPoolJobTask
     {
+        /// <summary>
+        /// The state of a threaded task.
+        /// </summary>
         public ThreadedTaskState State = ThreadedTaskState.InProgress;
+        /// <summary>
+        /// The exception thrown during task execution.
+        /// </summary>
         public Exception Exception = null;
+        /// <summary>
+        /// The task run function.
+        /// </summary>
         public readonly Action RunFunc = null;
+        /// <summary>
+        /// The execution time limit before task is aborted.
+        /// </summary>
         public readonly TimeSpan MaxRunTime;
-        public readonly DateTime ExpectedRunTimestamp;
+        /// <summary>
+        /// A prioritising measure that <see cref="ThreadPool"/> attempts to enforce.
+        /// </summary>
+        public readonly DateTime ExpectedEndTimestamp;
+        /// <summary>
+        /// The execution start time.
+        /// </summary>
         public DateTime RunStartTimestamp = DateTime.MaxValue;
 
         public ThreadPoolJobTask(Action i_RunFunc, ThreadPriority i_Priority = ThreadPriority.Normal)
         {
             RunFunc = i_RunFunc;
-            MaxRunTime = new TimeSpan(0, 0, 5, 0);
-            ExpectedRunTimestamp = GetExpectedEndTime(i_Priority);
+            MaxRunTime = new TimeSpan(0, 5, 0);
+            ExpectedEndTimestamp = GetExpectedEndTime(i_Priority);
         }
         public ThreadPoolJobTask(Action i_RunFunc, TimeSpan i_MaxRunTime, ThreadPriority i_Priority = ThreadPriority.Normal)
         {
             RunFunc = i_RunFunc;
             MaxRunTime = i_MaxRunTime;
-            ExpectedRunTimestamp = GetExpectedEndTime(i_Priority);
+            ExpectedEndTimestamp = GetExpectedEndTime(i_Priority);
         }
 
         private static DateTime GetExpectedEndTime(ThreadPriority i_Priority)
@@ -47,7 +65,10 @@ namespace Common.Threading
             return DateTime.UtcNow.AddSeconds(4);
         }
 
-
+        /// <summary>
+        /// A sorting comparer for prioritising tasks based on <see cref="ExpectedEndTimestamp"/> data.
+        /// </summary>
+        /// <seealso cref="System.Collections.Generic.IComparer{Common.Threading.ThreadPoolJobTask}" />
         public class TerminationComparer : IComparer<ThreadPoolJobTask>
         {
             private int m_Multiplier = 1;
@@ -59,7 +80,7 @@ namespace Common.Threading
 
             public int Compare(ThreadPoolJobTask i_A, ThreadPoolJobTask i_B)
             {
-                return i_A.ExpectedRunTimestamp.CompareTo(i_B.ExpectedRunTimestamp) * m_Multiplier;
+                return i_A.ExpectedEndTimestamp.CompareTo(i_B.ExpectedEndTimestamp) * m_Multiplier;
             }
             
             public static TerminationComparer Ascending = new TerminationComparer(true);

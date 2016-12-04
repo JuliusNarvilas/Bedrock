@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace Common.Threading
 {
@@ -41,9 +42,21 @@ namespace Common.Threading
             return result;
         }
 
+        public static ThreadPoolTaskResult<T> Create(Func<T> i_Funk, TimeSpan i_MaxRuntime, ThreadPriority i_Priority, out ThreadPoolJobTask o_Task)
+        {
+            var result = new ThreadPoolTaskResult<T>(i_Funk, i_MaxRuntime, i_Priority);
+            o_Task = result.m_TaskLink;
+            return result;
+        }
+
         private ThreadPoolTaskResult(Func<T> i_Funk)
         {
             m_TaskLink = new ThreadPoolJobTask(() => { m_Result = i_Funk.Invoke(); });
+        }
+
+        private ThreadPoolTaskResult(Func<T> i_Funk, TimeSpan i_MaxRuntime, ThreadPriority i_Priority)
+        {
+            m_TaskLink = new ThreadPoolJobTask(() => { m_Result = i_Funk.Invoke(); }, i_MaxRuntime, i_Priority);
         }
 
         public ThreadedTaskState State
