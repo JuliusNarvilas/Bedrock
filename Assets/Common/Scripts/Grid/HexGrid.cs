@@ -24,7 +24,7 @@ namespace Assets.Common.Scripts.Grid
             throw new NotImplementedException();
         }
 
-        protected override GridElement GetElement(Grid2DPosition i_Position)
+        protected override GridElement GetTile(Grid2DPosition i_Position)
         {
             throw new NotImplementedException();
         }

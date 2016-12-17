@@ -28,7 +28,7 @@ namespace Common.Grid
 
         public override Grid2DTile<TGridTileData, TTerrainData> GetTile(Grid2DPosition i_Position)
         {
-            GridElement element = GetElement(i_Position);
+            GridElement element = GetTile(i_Position);
             if (element != null)
             {
                 return element.Tile;
@@ -41,42 +41,42 @@ namespace Common.Grid
             GridElement tempElement = null;
             if (i_Position.X > 0)
             {
-                tempElement = GetElement(new Grid2DPosition(i_Position.X - 1, i_Position.Y));
+                tempElement = GetTile(new Grid2DPosition(i_Position.X - 1, i_Position.Y));
                 if (tempElement != null) o_ConnectedElements.Add(tempElement);
                 if (m_AllowMoveDiagonally)
                 {
-                    tempElement = GetElement(new Grid2DPosition(i_Position.X - 1, i_Position.Y - 1));
+                    tempElement = GetTile(new Grid2DPosition(i_Position.X - 1, i_Position.Y - 1));
                     if (tempElement != null) o_ConnectedElements.Add(tempElement);
-                    tempElement = GetElement(new Grid2DPosition(i_Position.X - 1, i_Position.Y + 1));
+                    tempElement = GetTile(new Grid2DPosition(i_Position.X - 1, i_Position.Y + 1));
                     if (tempElement != null) o_ConnectedElements.Add(tempElement);
                 }
             }
-            tempElement = GetElement(new Grid2DPosition(i_Position.X + 1, i_Position.Y));
+            tempElement = GetTile(new Grid2DPosition(i_Position.X + 1, i_Position.Y));
             if (tempElement != null) o_ConnectedElements.Add(tempElement);
             if (m_AllowMoveDiagonally)
             {
-                tempElement = GetElement(new Grid2DPosition(i_Position.X + 1, i_Position.Y - 1));
+                tempElement = GetTile(new Grid2DPosition(i_Position.X + 1, i_Position.Y - 1));
                 if (tempElement != null) o_ConnectedElements.Add(tempElement);
-                tempElement = GetElement(new Grid2DPosition(i_Position.X + 1, i_Position.Y + 1));
+                tempElement = GetTile(new Grid2DPosition(i_Position.X + 1, i_Position.Y + 1));
                 if (tempElement != null) o_ConnectedElements.Add(tempElement);
             }
 
             if (i_Position.Y > 0)
             {
-                tempElement = GetElement(new Grid2DPosition(i_Position.X, i_Position.Y - 1));
+                tempElement = GetTile(new Grid2DPosition(i_Position.X, i_Position.Y - 1));
                 if (tempElement != null)
                 {
                     o_ConnectedElements.Add(tempElement);
                 }
             }
-            tempElement = GetElement(new Grid2DPosition(i_Position.X, i_Position.Y + 1));
+            tempElement = GetTile(new Grid2DPosition(i_Position.X, i_Position.Y + 1));
             if (tempElement != null)
             {
                 o_ConnectedElements.Add(tempElement);
             }
         }
 
-        protected override GridElement GetElement(Grid2DPosition i_Position)
+        protected override GridElement GetTile(Grid2DPosition i_Position)
         {
             if (m_Tiles.Count > i_Position.X)
             {

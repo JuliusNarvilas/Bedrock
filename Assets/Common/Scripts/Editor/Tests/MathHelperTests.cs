@@ -11,7 +11,7 @@ namespace Common.Tests
             Random rnd = new Random();
             float randomNumberSource1 = rnd.Next(1, 1000);
 
-            float limit = MathHelper.DEFAULT_FLOATING_POINT_EQUAL_ERROR_MARGIN;
+            float limit = MathHelper.DEFAULT_FLOAT_EQUALITY_ERROR_MARGIN;
             bool limitMinEquals = MathHelper.EqualsWithMargin(randomNumberSource1, randomNumberSource1 - limit);
             bool limitMaxEquals = MathHelper.EqualsWithMargin(randomNumberSource1, randomNumberSource1 + limit);
 
