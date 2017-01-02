@@ -1,12 +1,12 @@
 ﻿
 namespace Common.Grid
 {
-    public struct Grid2DPosition
+    public struct GridPosition2D
     {
         public readonly int X;
         public readonly int Y;
 
-        public Grid2DPosition(int i_IndexX = 0, int i_IndexY = 0)
+        public GridPosition2D(int i_IndexX = 0, int i_IndexY = 0)
         {
             X = i_IndexX;
             Y = i_IndexY;

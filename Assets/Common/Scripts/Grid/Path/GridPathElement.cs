@@ -1,16 +1,25 @@
 ﻿using System.Collections.Generic;
 
-namespace Common.Grid
+namespace Common.Grid.Path
 {
+    public enum GridPathfindingState
+    {
+        New,
+        Opened,
+        Closed
+    }
+
     /// <summary>
-    /// Class for reprisenting <see cref="Grid2D{TTerrainData, TContext}"/> tile pathing data
+    /// Class for reprisenting a grid tile pathing data
     /// </summary>
-    public class GridPathElement<TTerrain, TPosition, TContext> where TTerrain : GridTerrain<TContext>
+    public class GridPathElement<TTile, TTerrain, TPosition, TContext>
+        where TTile : GridTile<TTerrain, TPosition, TContext>
+        where TTerrain : GridTerrain<TContext>
     {
         /// <summary>
         /// The tile data that is accessible to users.
         /// </summary>
-        public Grid2DTile<TTerrain, TPosition, TContext> Tile;
+        public TTile Tile;
         /// <summary>
         /// The approximate distance to the destination (must not be an underestimate).
         /// </summary>
@@ -26,7 +35,12 @@ namespace Common.Grid
         /// <summary>
         /// Current pathing inspection state.
         /// </summary>
-        public GridPathingState PathingState = GridPathingState.New;
+        public GridPathfindingState PathingState = GridPathfindingState.New;
+
+        /// <summary>
+        /// The parent element
+        /// </summary>
+        public GridPathElement<TTile, TTerrain, TPosition, TContext> Parent;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GridElement"/> class.
@@ -42,10 +56,26 @@ namespace Common.Grid
             HeuristicDistance = 0;
             PathCost = 0;
             FValue = 0;
-            PathingState = GridPathingState.New;
+            PathingState = GridPathfindingState.New;
+            Parent = null;
         }
 
-        protected class FValueComparer : IComparer<GridPathElement<TTerrain, TPosition, TContext>>
+        /// <summary>
+        /// Clones this instance.
+        /// </summary>
+        /// <returns>The cloned instance.</returns>
+        public GridPathElement<TTile, TTerrain, TPosition, TContext> Clone()
+        {
+            GridPathElement<TTile, TTerrain, TPosition, TContext> result = new GridPathElement<TTile, TTerrain, TPosition, TContext>();
+            result.HeuristicDistance = HeuristicDistance;
+            result.PathCost = PathCost;
+            result.FValue = FValue;
+            result.PathingState = PathingState;
+            result.Parent = Parent;
+            return result;
+        }
+
+        public class FValueComparer : IComparer<GridPathElement<TTile, TTerrain, TPosition, TContext>>
         {
             private int m_Modifier;
 
@@ -54,7 +84,7 @@ namespace Common.Grid
                 m_Modifier = i_Ascending ? 1 : -1;
             }
 
-            public int Compare(GridPathElement<TTerrain, TPosition, TContext> i_A, GridPathElement<TTerrain, TPosition, TContext> i_B)
+            public int Compare(GridPathElement<TTile, TTerrain, TPosition, TContext> i_A, GridPathElement<TTile, TTerrain, TPosition, TContext> i_B)
             {
                 return i_A.FValue.CompareTo(i_B.FValue) * m_Modifier;
             }
