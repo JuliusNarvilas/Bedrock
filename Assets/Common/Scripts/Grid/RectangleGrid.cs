@@ -34,14 +34,28 @@ namespace Common.Grid
         
         public TTile GetTile(GridPosition2D i_Position)
         {
+            int tilesIndex = i_Position.Y * m_SizeX + i_Position.X;
             Log.DebugAssert(
                 i_Position.X >= 0 && i_Position.Y >= 0 &&
-                i_Position.Y * m_SizeX + i_Position.X <= m_SizeX * m_SizeY,
+                tilesIndex <= m_SizeX * m_SizeY,
                 "RectangleGrid:GetTile position out of bounds ({0}, max {1};{2})", i_Position, m_SizeX, m_SizeY
             );
-            return m_Tiles[i_Position.Y * m_SizeX + i_Position.X];
+            return m_Tiles[tilesIndex];
         }
         
+        public bool TryGetTile(GridPosition2D i_Position, out TTile o_Tile)
+        {
+            int tilesIndex = i_Position.Y * m_SizeX + i_Position.X;
+            if (i_Position.X >= 0 && i_Position.Y >= 0 && tilesIndex <= m_SizeX * m_SizeY)
+            {
+                o_Tile = m_Tiles[tilesIndex];
+                return true;
+            }
+            o_Tile = null;
+            return false;
+        }
+
+        //TODO: IMPROVE and make it more readable
         public void GetConnected(GridPosition2D i_Position, List<TTile> o_ConnectedElements)
         {
             TTile tempElement = null;

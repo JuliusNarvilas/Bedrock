@@ -169,7 +169,7 @@ namespace Common.Grid.Path
             //clean closed list
             for (int i = 0; i < maxPathTileCount; ++i)
             {
-                m_ClosedList[i].Reset();
+                m_ClosedList[i].Clear();
             }
             m_ClosedList.Clear();
             m_ClosedList = null;
@@ -177,7 +177,7 @@ namespace Common.Grid.Path
             int openListElementCount = m_OpenList.Count;
             for (int i = 0; i < openListElementCount; ++i)
             {
-                m_OpenList[i].Reset();
+                m_OpenList[i].Clear();
             }
             m_OpenList.Clear();
             m_OpenList = null;

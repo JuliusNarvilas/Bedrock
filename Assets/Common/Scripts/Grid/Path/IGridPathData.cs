@@ -13,7 +13,9 @@ namespace Common.Grid.Path
         where TTile : GridTile<TTerrain, TPosition, TContext>
         where TTerrain : GridTerrain<TContext>
     {
-        IGridPathData<TTile, TTerrain, TPosition, TContext> GetGridPathData(TPosition i_Min, TPosition i_Max);
+        IGridPathData<TTile, TTerrain, TPosition, TContext> GetGridPathData(TPosition i_Size);
+
+        void Recycle(IGridPathData<TTile, TTerrain, TPosition, TContext> i_Data);
     }
 
     public interface IGridPathData<TTile, TTerrain, TPosition, TContext> : IDisposable
@@ -22,6 +24,8 @@ namespace Common.Grid.Path
     {
         GridPathDataResponse TryGetElement(TPosition i_Pos, out GridPathElement<TTile, TTerrain, TPosition, TContext> o_Value);
 
-        void Grow(TPosition i_EnvelopPos);
+        bool Grow(TPosition i_EnvelopPos);
+
+        void Clean();
     }
 }

@@ -19,6 +19,8 @@ namespace Common.Grid
 
         TTile GetTile(TPosition i_Position);
 
+        bool TryGetTile(TPosition i_Position, out TTile o_Tile);
+
         int GetHeuristicDistance(TPosition i_From, TPosition i_To);
 
         void GetConnected(TPosition i_Position, List<TTile> o_ConnectedElements);

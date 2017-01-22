@@ -38,5 +38,10 @@ namespace Assets.Common.Scripts.Grid
         {
             throw new NotImplementedException();
         }
+
+        public bool TryGetTile(GridPosition2D i_Position, out TTile o_Tile)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

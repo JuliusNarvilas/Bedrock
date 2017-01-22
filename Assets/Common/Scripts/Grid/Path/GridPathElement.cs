@@ -51,8 +51,9 @@ namespace Common.Grid.Path
         /// <summary>
         /// Method for cleaning up pathing data back to default state.
         /// </summary>
-        public void Reset()
+        public void Clear()
         {
+            Tile = null;
             HeuristicDistance = 0;
             PathCost = 0;
             FValue = 0;

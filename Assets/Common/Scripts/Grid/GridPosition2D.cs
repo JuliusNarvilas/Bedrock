@@ -1,7 +1,9 @@
 ﻿
+using System;
+
 namespace Common.Grid
 {
-    public struct GridPosition2D
+    public struct GridPosition2D : IEquatable<GridPosition2D>
     {
         public readonly int X;
         public readonly int Y;
@@ -10,6 +12,11 @@ namespace Common.Grid
         {
             X = i_IndexX;
             Y = i_IndexY;
+        }
+
+        public bool Equals(GridPosition2D i_Other)
+        {
+            return X == i_Other.X && Y == i_Other.Y;
         }
 
         public override string ToString()
